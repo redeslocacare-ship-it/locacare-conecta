@@ -117,6 +117,13 @@ def git_push_with_token(timeout_seconds, token):
     return run_command_non_interactive(cmd, "Git push autenticado (token)", timeout_seconds, env=base_env())
 
 
+def git_ls_remote_with_token(timeout_seconds, token):
+    creds = f"x-access-token:{token}".encode("utf-8")
+    basic = base64.b64encode(creds).decode("utf-8")
+    cmd = f'git -c http.https://github.com/.extraheader="AUTHORIZATION: basic {basic}" ls-remote --heads origin'
+    return run_command_non_interactive(cmd, "Verificando remote (autenticado)", timeout_seconds, env=base_env())
+
+
 def _reader_thread(pipe, buffer, last_output_at):
     try:
         for line in iter(pipe.readline, ""):
@@ -292,7 +299,12 @@ def gen_supabase_types(timeout_seconds):
         return True
 
     log("Não foi possível gerar types automaticamente.", "WARN")
-    if err.strip():
+    err_l = (err or "").lower()
+    if "necessary privileges" in err_l or "necesssary privileges" in err_l or "access-control" in err_l:
+        log("Seu token não tem privilégio de plataforma para 'gen types'.", "ERROR")
+        log("No Supabase Dashboard, garanta que o usuário do token seja Owner/Admin no projeto.", "INFO")
+        log("Depois, gere um token em Account > Tokens e exporte em SUPABASE_ACCESS_TOKEN.", "INFO")
+    elif err.strip():
         log("Se for autenticação, rode: npx supabase login", "INFO")
     return False
 
@@ -327,8 +339,12 @@ def git_sync(timeout_push_seconds):
 
     code, _out, err = run_command_non_interactive("git push", "Git push (dispara deploy Vercel)", timeout_push_seconds, env=base_env())
     if code != 0 and github_token:
-        if "repository not found" in (err or "").lower() or "authentication" in (err or "").lower() or "403" in (err or "").lower():
+        err_l = (err or "").lower()
+        if "repository not found" in err_l or "authentication" in err_l or "403" in err_l:
             git_push_with_token(timeout_push_seconds, github_token)
+
+    if github_token:
+        git_ls_remote_with_token(20, github_token)
     return True
 
 

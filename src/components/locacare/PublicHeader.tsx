@@ -3,11 +3,13 @@ import { NavLink as RouterNavLink } from "react-router-dom";
 import { Menu, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { BrandLogo } from "@/components/locacare/BrandLogo";
 
 /**
  * Cabeçalho do site público (mobile-first).
  *
  * Melhorias:
+ * - Usa a logomarca oficial
  * - Menu móvel em Drawer (Sheet)
  * - CTAs sempre acessíveis no celular
  */
@@ -25,12 +27,8 @@ export function PublicHeader({ onSolicitarOrcamento }: { onSolicitarOrcamento: (
   return (
     <header className="sticky top-0 z-40 border-b bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="h-9 w-9 shrink-0 rounded-xl bg-hero shadow-soft" aria-hidden />
-          <div className="leading-tight min-w-0">
-            <p className="font-semibold truncate">LocaCare</p>
-            <p className="text-xs text-muted-foreground truncate">Goiânia e região metropolitana</p>
-          </div>
+        <div className="min-w-0">
+          <BrandLogo className="hover-lift" compact />
         </div>
 
         {/* Desktop */}
@@ -44,39 +42,42 @@ export function PublicHeader({ onSolicitarOrcamento }: { onSolicitarOrcamento: (
 
         <div className="flex items-center gap-2">
           {/* CTA WhatsApp compacto (mobile) */}
-          <Button asChild variant="soft" size="icon" className="sm:hidden" aria-label="Chamar no WhatsApp">
+          <Button asChild variant="soft" size="icon" className="sm:hidden hover-lift" aria-label="Chamar no WhatsApp">
             <a href={whatsappHref} target="_blank" rel="noreferrer">
               <MessageCircle />
             </a>
           </Button>
 
-          <Button asChild variant="soft" className="hidden sm:inline-flex">
+          <Button asChild variant="soft" className="hidden sm:inline-flex hover-lift">
             <a href={whatsappHref} target="_blank" rel="noreferrer">
               Chamar no WhatsApp
             </a>
           </Button>
 
-          <Button variant="default" onClick={onSolicitarOrcamento} className="hidden sm:inline-flex">
+          <Button variant="default" onClick={onSolicitarOrcamento} className="hidden sm:inline-flex hover-lift">
             Solicitar orçamento
           </Button>
 
           {/* Mobile menu */}
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="outline" size="icon" className="md:hidden" aria-label="Abrir menu">
+              <Button variant="outline" size="icon" className="md:hidden hover-lift" aria-label="Abrir menu">
                 <Menu />
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[340px] sm:w-[380px]">
               <SheetHeader>
-                <SheetTitle>LocaCare</SheetTitle>
+                <SheetTitle>
+                  <span className="sr-only">Menu</span>
+                  LocaCare
+                </SheetTitle>
               </SheetHeader>
 
               <div className="mt-6 space-y-2">
                 {links.map((l) => (
                   <a
                     key={l.href}
-                    className="block rounded-lg border bg-background px-4 py-3 text-sm hover:bg-accent"
+                    className="block rounded-lg border bg-background px-4 py-3 text-sm hover:bg-accent hover-lift"
                     href={l.href}
                   >
                     {l.label}
@@ -85,12 +86,12 @@ export function PublicHeader({ onSolicitarOrcamento }: { onSolicitarOrcamento: (
               </div>
 
               <div className="mt-6 grid gap-2">
-                <Button asChild variant="default">
+                <Button asChild variant="default" className="hover-lift">
                   <a href={whatsappHref} target="_blank" rel="noreferrer">
                     Chamar no WhatsApp
                   </a>
                 </Button>
-                <Button variant="hero" onClick={onSolicitarOrcamento}>
+                <Button variant="hero" onClick={onSolicitarOrcamento} className="hover-lift">
                   Solicitar orçamento
                 </Button>
 
@@ -111,12 +112,12 @@ export function PublicHeader({ onSolicitarOrcamento }: { onSolicitarOrcamento: (
       {/* Barra de CTA fixa no mobile (melhor conversão) */}
       <div className="border-t bg-background/70 backdrop-blur md:hidden">
         <div className="container flex items-center gap-2 py-2">
-          <Button asChild className="flex-1">
+          <Button asChild className="flex-1 hover-lift">
             <a href={whatsappHref} target="_blank" rel="noreferrer">
               WhatsApp
             </a>
           </Button>
-          <Button variant="hero" className="flex-1" onClick={onSolicitarOrcamento}>
+          <Button variant="hero" className="flex-1 hover-lift" onClick={onSolicitarOrcamento}>
             Orçamento
           </Button>
         </div>

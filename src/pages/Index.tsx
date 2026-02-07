@@ -13,9 +13,9 @@ import { useComoFunciona, useDepoimentosPublicados, useFaqsPublicados, usePlanos
 /**
  * Home pública (conversão) — LocaCare
  *
- * SEO/UX:
- * - Conteúdo focado em Goiânia e região metropolitana
- * - Componentes e textos em pt-BR
+ * Melhorias visuais:
+ * - Paleta mais vibrante (tokens)
+ * - Movimentos: entradas suaves, cards com hover e fundo com elementos flutuantes
  */
 const Index = () => {
   const reduzirAnimacao = useReducedMotion();
@@ -59,6 +59,21 @@ const Index = () => {
     contatoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.08,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    show: { opacity: 1, y: 0 },
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <PublicHeader onSolicitarOrcamento={rolarParaContato} />
@@ -68,8 +83,15 @@ const Index = () => {
         {/* HERO */}
         <section className="relative overflow-hidden bg-hero">
           {/* “assinatura” visual: spotlight suave */}
-          <div className="pointer-events-none absolute inset-0 opacity-70 [mask-image:radial-gradient(60%_50%_at_50%_35%,black,transparent)]">
-            <div className={"absolute -inset-24 bg-shine animate-spotlight"} />
+          <div className="pointer-events-none absolute inset-0 opacity-80 [mask-image:radial-gradient(60%_50%_at_50%_35%,black,transparent)]">
+            <div className="absolute -inset-24 bg-shine animate-spotlight" />
+          </div>
+
+          {/* Elementos flutuantes (dinamismo) */}
+          <div className="pointer-events-none absolute inset-0">
+            <div className="absolute -left-16 top-24 h-48 w-48 rounded-full bg-primary/15 blur-2xl animate-float" />
+            <div className="absolute -right-20 top-12 h-56 w-56 rounded-full bg-accent/60 blur-3xl animate-float" />
+            <div className="absolute left-1/2 top-[65%] h-64 w-64 -translate-x-1/2 rounded-full bg-primary/10 blur-3xl animate-float" />
           </div>
 
           <div className="container relative py-14 md:py-20">
@@ -88,20 +110,20 @@ const Index = () => {
                 </p>
 
                 <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <Button asChild variant="default" size="lg">
+                  <Button asChild variant="default" size="lg" className="hover-lift">
                     <a href={whatsappHref} target="_blank" rel="noreferrer">
                       Chamar no WhatsApp
                     </a>
                   </Button>
-                  <Button variant="hero" size="lg" onClick={rolarParaContato}>
+                  <Button variant="hero" size="lg" onClick={rolarParaContato} className="hover-lift">
                     Solicitar orçamento
                   </Button>
                 </div>
 
                 <div className="mt-7 grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
-                  <div className="rounded-lg border bg-background/60 p-3 shadow-soft">Entrega + instalação</div>
-                  <div className="rounded-lg border bg-background/60 p-3 shadow-soft">Suporte durante o uso</div>
-                  <div className="rounded-lg border bg-background/60 p-3 shadow-soft">Coleta agendada</div>
+                  <div className="rounded-lg border glass p-3 shadow-soft">Entrega + instalação</div>
+                  <div className="rounded-lg border glass p-3 shadow-soft">Suporte durante o uso</div>
+                  <div className="rounded-lg border glass p-3 shadow-soft">Coleta agendada</div>
                 </div>
               </motion.div>
 
@@ -135,28 +157,34 @@ const Index = () => {
 
         {/* BENEFÍCIOS */}
         <section id="beneficios" className="container py-14 md:py-18 scroll-mt-24">
-          <div className="flex items-end justify-between gap-6">
-            <div>
-              <h2 className="text-3xl md:text-4xl">Benefícios que fazem diferença</h2>
-              <p className="mt-2 text-muted-foreground">Conforto e segurança para o pós-operatório — em casa.</p>
-            </div>
+          <div>
+            <h2 className="text-3xl md:text-4xl">Benefícios que fazem diferença</h2>
+            <p className="mt-2 text-muted-foreground">Conforto e segurança para o pós-operatório — em casa.</p>
           </div>
 
-          <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <motion.div
+            className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4"
+            variants={containerVariants}
+            initial={reduzirAnimacao ? false : "hidden"}
+            whileInView={reduzirAnimacao ? undefined : "show"}
+            viewport={{ once: true, margin: "-80px" }}
+          >
             {beneficios.map((b) => (
-              <Card key={b.titulo} className="shadow-soft">
-                <CardHeader className="space-y-3">
-                  <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-hero shadow-soft">
-                    <b.icon className="h-5 w-5" />
-                  </div>
-                  <CardTitle className="text-xl">{b.titulo}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">{b.descricao}</p>
-                </CardContent>
-              </Card>
+              <motion.div key={b.titulo} variants={itemVariants}>
+                <Card className="shadow-soft hover-lift">
+                  <CardHeader className="space-y-3">
+                    <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-hero shadow-soft">
+                      <b.icon className="h-5 w-5" />
+                    </div>
+                    <CardTitle className="text-xl">{b.titulo}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">{b.descricao}</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </section>
 
         {/* PLANOS */}
@@ -167,7 +195,7 @@ const Index = () => {
                 <h2 className="text-3xl md:text-4xl">Planos de locação</h2>
                 <p className="mt-2 text-muted-foreground">Valores configurados no sistema (sem preço fixo no código).</p>
               </div>
-              <Button variant="hero" onClick={rolarParaContato}>
+              <Button variant="hero" onClick={rolarParaContato} className="hover-lift">
                 Pedir orçamento
               </Button>
             </div>
@@ -177,7 +205,7 @@ const Index = () => {
                 <p className="text-sm text-muted-foreground">Nenhum plano cadastrado ainda.</p>
               ) : (
                 planos.map((p) => (
-                  <div key={p.id} className="rounded-xl border bg-background p-5 shadow-soft">
+                  <div key={p.id} className="rounded-xl border bg-background p-5 shadow-soft hover-lift">
                     <p className="font-semibold">{p.nome_plano}</p>
                     <p className="mt-1 text-sm text-muted-foreground">Duração: {p.dias_duracao} dias</p>
                     <p className="mt-4 text-2xl font-semibold">
@@ -198,7 +226,7 @@ const Index = () => {
 
           <div className="mt-8 grid gap-4 md:grid-cols-5">
             {(passos.length ? passos : [{ titulo: "Carregando…", descricao: "" }]).map((p, idx) => (
-              <div key={`${p.titulo}-${idx}`} className="rounded-xl border bg-card p-5 shadow-soft md:col-span-1">
+              <div key={`${p.titulo}-${idx}`} className="rounded-xl border bg-card p-5 shadow-soft hover-lift md:col-span-1">
                 <p className="text-xs text-muted-foreground">Passo {idx + 1}</p>
                 <p className="mt-2 font-semibold">{p.titulo}</p>
                 <p className="mt-2 text-sm text-muted-foreground">{p.descricao}</p>
@@ -215,10 +243,10 @@ const Index = () => {
               <p className="mt-2 text-muted-foreground">Apoio essencial nos primeiros dias de recuperação.</p>
             </div>
             <ul className="grid gap-3 text-sm">
-              <li className="rounded-lg border bg-background p-4 shadow-soft">Cirurgias plásticas (abdômen, mama, lipo)</li>
-              <li className="rounded-lg border bg-background p-4 shadow-soft">Cirurgias ortopédicas (coluna, ombro, joelho)</li>
-              <li className="rounded-lg border bg-background p-4 shadow-soft">Idosos com dificuldade de mobilidade</li>
-              <li className="rounded-lg border bg-background p-4 shadow-soft">Pacientes com dor ou restrição para deitar/levantar</li>
+              <li className="rounded-lg border bg-background p-4 shadow-soft hover-lift">Cirurgias plásticas (abdômen, mama, lipo)</li>
+              <li className="rounded-lg border bg-background p-4 shadow-soft hover-lift">Cirurgias ortopédicas (coluna, ombro, joelho)</li>
+              <li className="rounded-lg border bg-background p-4 shadow-soft hover-lift">Idosos com dificuldade de mobilidade</li>
+              <li className="rounded-lg border bg-background p-4 shadow-soft hover-lift">Pacientes com dor ou restrição para deitar/levantar</li>
             </ul>
           </div>
         </section>
@@ -233,7 +261,7 @@ const Index = () => {
               <p className="text-sm text-muted-foreground">Sem depoimentos publicados ainda.</p>
             ) : (
               depoimentos.map((d) => (
-                <Card key={d.id} className="shadow-soft">
+                <Card key={d.id} className="shadow-soft hover-lift">
                   <CardHeader>
                     <CardTitle className="text-xl">{d.nome_cliente}</CardTitle>
                     {d.cidade ? <p className="text-sm text-muted-foreground">{d.cidade}</p> : null}

@@ -72,31 +72,31 @@ export default {
         lift: "var(--shadow-lift)",
       },
       backgroundImage: {
-        "hero": "var(--gradient-hero)",
-        "shine": "var(--gradient-shine)",
+        hero: "var(--gradient-hero)",
+        shine: "var(--gradient-shine)",
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0", opacity: "0" },
+          to: { height: "var(--radix-accordion-content-height)", opacity: "1" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)", opacity: "1" },
+          to: { height: "0", opacity: "0" },
         },
-        "float": {
+        "fade-in": {
+          "0%": { opacity: "0", transform: "translateY(10px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "scale-in": {
+          "0%": { opacity: "0", transform: "scale(0.97)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        float: {
           "0%, 100%": { transform: "translateY(0px)" },
-          "50%": { transform: "translateY(-6px)" },
+          "50%": { transform: "translateY(-10px)" },
         },
-        "spotlight": {
+        spotlight: {
           "0%": { transform: "translate(-20%, -20%) scale(0.9)", opacity: "0.6" },
           "100%": { transform: "translate(20%, 20%) scale(1.05)", opacity: "1" },
         },
@@ -104,8 +104,11 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "float": "float 5.5s ease-in-out infinite",
-        "spotlight": "spotlight 9s ease-in-out infinite alternate",
+        "fade-in": "fade-in 0.35s ease-out",
+        "scale-in": "scale-in 0.25s ease-out",
+        enter: "fade-in 0.35s ease-out, scale-in 0.25s ease-out",
+        float: "float 6.5s ease-in-out infinite",
+        spotlight: "spotlight 10s ease-in-out infinite alternate",
       },
     },
   },

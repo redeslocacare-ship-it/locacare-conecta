@@ -125,7 +125,28 @@ const Index = () => {
                   </Button>
                 </div>
 
-                <div className="mt-7 grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
+                {/* Prova social (compacta, chamativa e legível no mobile) */}
+                <motion.div
+                  className="mt-6 grid gap-3 sm:grid-cols-3"
+                  variants={containerVariants}
+                  initial={reduzirAnimacao ? false : "hidden"}
+                  animate={reduzirAnimacao ? undefined : "show"}
+                >
+                  <motion.div variants={itemVariants} className="rounded-xl border glass p-4 shadow-soft">
+                    <p className="text-xl font-semibold leading-none">4,9/5</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Avaliações</p>
+                  </motion.div>
+                  <motion.div variants={itemVariants} className="rounded-xl border glass p-4 shadow-soft">
+                    <p className="text-xl font-semibold leading-none">Até 24h</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Entrega (Goiânia)</p>
+                  </motion.div>
+                  <motion.div variants={itemVariants} className="rounded-xl border glass p-4 shadow-soft">
+                    <p className="text-xl font-semibold leading-none">300+</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Famílias atendidas</p>
+                  </motion.div>
+                </motion.div>
+
+                <div className="mt-5 grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
                   <div className="rounded-lg border glass p-3 shadow-soft">Entrega + instalação</div>
                   <div className="rounded-lg border glass p-3 shadow-soft">Suporte durante o uso</div>
                   <div className="rounded-lg border glass p-3 shadow-soft">Coleta agendada</div>

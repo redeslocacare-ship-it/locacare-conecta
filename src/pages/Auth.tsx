@@ -152,8 +152,8 @@ export default function AuthPage() {
               </Form>
 
               <p className="mt-6 text-xs text-muted-foreground">
-                Dica: para testes rápidos, você pode desativar temporariamente a confirmação de e-mail nas configurações de
-                autenticação do Lovable Cloud.
+                Dica: se você estiver em ambiente de teste, verifique nas configurações de autenticação se a confirmação de e-mail
+                está ativa.
               </p>
             </CardContent>
           </Card>

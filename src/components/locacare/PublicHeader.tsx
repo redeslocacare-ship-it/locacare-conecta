@@ -28,7 +28,7 @@ export function PublicHeader({ onSolicitarOrcamento }: { onSolicitarOrcamento: (
     <header className="sticky top-0 z-40 border-b bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between gap-3">
         <div className="min-w-0">
-          <BrandLogo className="hover-lift" compact />
+          <BrandLogo className="hover-lift" />
         </div>
 
         {/* Desktop */}

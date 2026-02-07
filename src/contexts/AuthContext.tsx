@@ -3,7 +3,7 @@ import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Contexto de autenticação (Lovable Cloud).
+ * Contexto de autenticação (sessão).
  *
  * IMPORTANTE:
  * - Guardamos a sessão completa (Session), não apenas o usuário.

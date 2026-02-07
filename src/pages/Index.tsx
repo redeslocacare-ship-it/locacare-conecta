@@ -1,12 +1,289 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import React, { useMemo, useRef } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { ShieldCheck, Truck, Zap, HandHeart } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { PublicHeader } from "@/components/locacare/PublicHeader";
+import { PublicFooter } from "@/components/locacare/PublicFooter";
+import { PreReservaForm } from "@/components/locacare/PreReservaForm";
+import { WhatsAppFloatingButton } from "@/components/locacare/WhatsAppFloatingButton";
+import { useComoFunciona, useDepoimentosPublicados, useFaqsPublicados, usePlanosAtivos } from "@/hooks/useConteudosPublicos";
 
+/**
+ * Home pública (conversão) — LocaCare
+ *
+ * SEO/UX:
+ * - Conteúdo focado em Goiânia e região metropolitana
+ * - Componentes e textos em pt-BR
+ */
 const Index = () => {
+  const reduzirAnimacao = useReducedMotion();
+  const contatoRef = useRef<HTMLDivElement | null>(null);
+
+  const { data: depoimentos = [] } = useDepoimentosPublicados();
+  const { data: faqs = [] } = useFaqsPublicados();
+  const { data: passos = [] } = useComoFunciona();
+  const { data: planos = [] } = usePlanosAtivos();
+
+  const mensagem = "Olá, quero alugar uma poltrona pós-cirúrgica com a LocaCare.";
+  const whatsappHref = `https://wa.me/5562936180658?text=${encodeURIComponent(mensagem)}`;
+
+  const beneficios = useMemo(
+    () => [
+      {
+        titulo: "Levante-se sem esforço",
+        descricao: "Função lift que auxilia a ficar em pé com mais segurança e autonomia.",
+        icon: Zap,
+      },
+      {
+        titulo: "Conforto em várias posições",
+        descricao: "Modo sentado, leitura e descanso com apoio adequado durante a recuperação.",
+        icon: HandHeart,
+      },
+      {
+        titulo: "Aluguel mais econômico que compra",
+        descricao: "Uso temporário com melhor custo-benefício para o período pós-operatório.",
+        icon: ShieldCheck,
+      },
+      {
+        titulo: "Atendimento domiciliar",
+        descricao: "Entrega e instalação em Goiânia e região metropolitana.",
+        icon: Truck,
+      },
+    ],
+    [],
+  );
+
+  function rolarParaContato() {
+    contatoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <PublicHeader onSolicitarOrcamento={rolarParaContato} />
+      <WhatsAppFloatingButton />
+
+      <main>
+        {/* HERO */}
+        <section className="relative overflow-hidden bg-hero">
+          {/* “assinatura” visual: spotlight suave */}
+          <div className="pointer-events-none absolute inset-0 opacity-70 [mask-image:radial-gradient(60%_50%_at_50%_35%,black,transparent)]">
+            <div className={"absolute -inset-24 bg-shine animate-spotlight"} />
+          </div>
+
+          <div className="container relative py-14 md:py-20">
+            <div className="grid items-center gap-10 md:grid-cols-[1.2fr_0.8fr]">
+              <motion.div
+                initial={reduzirAnimacao ? false : { opacity: 0, y: 14 }}
+                animate={reduzirAnimacao ? undefined : { opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+              >
+                <h1 className="text-balance text-4xl leading-[1.03] md:text-6xl">
+                  Poltrona pós-cirúrgica em Goiânia com conforto, segurança e autonomia
+                </h1>
+                <p className="mt-5 max-w-xl text-pretty text-base text-muted-foreground md:text-lg">
+                  Aluguel de poltrona lift reclinável ideal para recuperação de cirurgias plásticas, ortopédicas e
+                  pacientes idosos.
+                </p>
+
+                <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <Button asChild variant="default" size="lg">
+                    <a href={whatsappHref} target="_blank" rel="noreferrer">
+                      Chamar no WhatsApp
+                    </a>
+                  </Button>
+                  <Button variant="hero" size="lg" onClick={rolarParaContato}>
+                    Solicitar orçamento
+                  </Button>
+                </div>
+
+                <div className="mt-7 grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
+                  <div className="rounded-lg border bg-background/60 p-3 shadow-soft">Entrega + instalação</div>
+                  <div className="rounded-lg border bg-background/60 p-3 shadow-soft">Suporte durante o uso</div>
+                  <div className="rounded-lg border bg-background/60 p-3 shadow-soft">Coleta agendada</div>
+                </div>
+              </motion.div>
+
+              <motion.div
+                className="relative"
+                initial={reduzirAnimacao ? false : { opacity: 0, scale: 0.98 }}
+                animate={reduzirAnimacao ? undefined : { opacity: 1, scale: 1 }}
+                transition={{ duration: 0.7, ease: "easeOut", delay: 0.05 }}
+              >
+                <div className="rounded-2xl border bg-card p-5 shadow-lift">
+                  <p className="font-semibold">Produto principal</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Poltrona lift reclinável PU preta</p>
+
+                  <div className="mt-4 rounded-xl bg-hero p-5 shadow-soft">
+                    <p className="text-sm text-muted-foreground">Ideal para:</p>
+                    <ul className="mt-2 space-y-1 text-sm">
+                      <li>• Abdominoplastia e mamoplastia</li>
+                      <li>• Ortopedia (coluna, joelho, ombro)</li>
+                      <li>• Idosos e mobilidade reduzida</li>
+                    </ul>
+                  </div>
+
+                  <p className="mt-4 text-xs text-muted-foreground">
+                    Atendimento: (62) 93618-0658 • contato@locacare.com.br
+                  </p>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* BENEFÍCIOS */}
+        <section id="beneficios" className="container py-14 md:py-18 scroll-mt-24">
+          <div className="flex items-end justify-between gap-6">
+            <div>
+              <h2 className="text-3xl md:text-4xl">Benefícios que fazem diferença</h2>
+              <p className="mt-2 text-muted-foreground">Conforto e segurança para o pós-operatório — em casa.</p>
+            </div>
+          </div>
+
+          <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {beneficios.map((b) => (
+              <Card key={b.titulo} className="shadow-soft">
+                <CardHeader className="space-y-3">
+                  <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-hero shadow-soft">
+                    <b.icon className="h-5 w-5" />
+                  </div>
+                  <CardTitle className="text-xl">{b.titulo}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">{b.descricao}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        {/* PLANOS */}
+        <section className="container pb-14">
+          <div className="rounded-2xl border bg-card p-8 shadow-soft">
+            <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+              <div>
+                <h2 className="text-3xl md:text-4xl">Planos de locação</h2>
+                <p className="mt-2 text-muted-foreground">Valores configurados no sistema (sem preço fixo no código).</p>
+              </div>
+              <Button variant="hero" onClick={rolarParaContato}>
+                Pedir orçamento
+              </Button>
+            </div>
+
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              {planos.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhum plano cadastrado ainda.</p>
+              ) : (
+                planos.map((p) => (
+                  <div key={p.id} className="rounded-xl border bg-background p-5 shadow-soft">
+                    <p className="font-semibold">{p.nome_plano}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Duração: {p.dias_duracao} dias</p>
+                    <p className="mt-4 text-2xl font-semibold">
+                      {Number(p.preco_base).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Preço base — confirme datas e disponibilidade.</p>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* COMO FUNCIONA */}
+        <section id="como-funciona" className="container py-14 scroll-mt-24">
+          <h2 className="text-3xl md:text-4xl">Como funciona a locação</h2>
+          <p className="mt-2 text-muted-foreground">Passo a passo simples (editável no banco).</p>
+
+          <div className="mt-8 grid gap-4 md:grid-cols-5">
+            {(passos.length ? passos : [{ titulo: "Carregando…", descricao: "" }]).map((p, idx) => (
+              <div key={`${p.titulo}-${idx}`} className="rounded-xl border bg-card p-5 shadow-soft md:col-span-1">
+                <p className="text-xs text-muted-foreground">Passo {idx + 1}</p>
+                <p className="mt-2 font-semibold">{p.titulo}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{p.descricao}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* PARA QUEM É INDICADO */}
+        <section className="container py-14">
+          <div className="grid gap-8 rounded-2xl border bg-card p-8 shadow-soft md:grid-cols-2">
+            <div>
+              <h2 className="text-3xl md:text-4xl">Para quem é indicado</h2>
+              <p className="mt-2 text-muted-foreground">Apoio essencial nos primeiros dias de recuperação.</p>
+            </div>
+            <ul className="grid gap-3 text-sm">
+              <li className="rounded-lg border bg-background p-4 shadow-soft">Cirurgias plásticas (abdômen, mama, lipo)</li>
+              <li className="rounded-lg border bg-background p-4 shadow-soft">Cirurgias ortopédicas (coluna, ombro, joelho)</li>
+              <li className="rounded-lg border bg-background p-4 shadow-soft">Idosos com dificuldade de mobilidade</li>
+              <li className="rounded-lg border bg-background p-4 shadow-soft">Pacientes com dor ou restrição para deitar/levantar</li>
+            </ul>
+          </div>
+        </section>
+
+        {/* DEPOIMENTOS */}
+        <section className="container py-14">
+          <h2 className="text-3xl md:text-4xl">Depoimentos</h2>
+          <p className="mt-2 text-muted-foreground">Experiências reais de quem já alugou com a LocaCare.</p>
+
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            {depoimentos.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Sem depoimentos publicados ainda.</p>
+            ) : (
+              depoimentos.map((d) => (
+                <Card key={d.id} className="shadow-soft">
+                  <CardHeader>
+                    <CardTitle className="text-xl">{d.nome_cliente}</CardTitle>
+                    {d.cidade ? <p className="text-sm text-muted-foreground">{d.cidade}</p> : null}
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">“{d.texto_depoimento}”</p>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section id="faq" className="container py-14 scroll-mt-24">
+          <h2 className="text-3xl md:text-4xl">Perguntas frequentes</h2>
+          <p className="mt-2 text-muted-foreground">Tire dúvidas antes de solicitar orçamento.</p>
+
+          <div className="mt-6 rounded-2xl border bg-card p-3 shadow-soft">
+            <Accordion type="single" collapsible className="w-full">
+              {faqs.length === 0 ? (
+                <p className="p-4 text-sm text-muted-foreground">Sem perguntas publicadas ainda.</p>
+              ) : (
+                faqs.map((f) => (
+                  <AccordionItem key={f.id} value={f.id}>
+                    <AccordionTrigger className="px-3 text-left">{f.pergunta}</AccordionTrigger>
+                    <AccordionContent className="px-3 text-muted-foreground">{f.resposta}</AccordionContent>
+                  </AccordionItem>
+                ))
+              )}
+            </Accordion>
+          </div>
+        </section>
+
+        {/* CONTATO / PRÉ-RESERVA */}
+        <section className="container py-14" ref={contatoRef}>
+          <div className="mb-6 rounded-2xl border bg-card p-8 shadow-soft">
+            <h2 id="contato" className="text-3xl md:text-4xl scroll-mt-24">
+              Solicite um orçamento
+            </h2>
+            <p className="mt-2 text-muted-foreground">
+              Prefere falar direto? <a className="underline-offset-4 hover:underline" href={whatsappHref}>Chame no WhatsApp</a>.
+            </p>
+          </div>
+
+          <PreReservaForm id="pre-reserva" />
+        </section>
+      </main>
+
+      <PublicFooter />
     </div>
   );
 };

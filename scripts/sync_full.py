@@ -1,4 +1,5 @@
 import argparse
+import base64
 import os
 import shutil
 import socket
@@ -71,6 +72,49 @@ def base_env():
     env.setdefault("CI", "1")
     env.setdefault("GIT_TERMINAL_PROMPT", "0")
     return env
+
+
+def load_tokens():
+    supabase_token = os.environ.get("SUPABASE_ACCESS_TOKEN")
+    github_token = os.environ.get("GITHUB_TOKEN")
+
+    if supabase_token and github_token:
+        return supabase_token.strip(), github_token.strip()
+
+    cre_path = os.path.join(os.getcwd(), "cre.txt")
+    if not os.path.exists(cre_path):
+        return supabase_token.strip() if supabase_token else None, github_token.strip() if github_token else None
+
+    try:
+        with open(cre_path, "r", encoding="utf-8", errors="replace") as f:
+            content = f.read().splitlines()
+    except Exception:
+        return supabase_token.strip() if supabase_token else None, github_token.strip() if github_token else None
+
+    if not supabase_token:
+        for line in content:
+            if line.strip().lower().startswith("token:"):
+                value = line.split(":", 1)[1].strip()
+                if value.startswith("sbp_"):
+                    supabase_token = value
+                    break
+
+    if not github_token:
+        for line in content:
+            if "token classic" in line.lower() and ":" in line:
+                value = line.split(":", 1)[1].strip()
+                if value.startswith("ghp_"):
+                    github_token = value
+                    break
+
+    return supabase_token.strip() if supabase_token else None, github_token.strip() if github_token else None
+
+
+def git_push_with_token(timeout_seconds, token):
+    creds = f"x-access-token:{token}".encode("utf-8")
+    basic = base64.b64encode(creds).decode("utf-8")
+    cmd = f'git -c http.https://github.com/.extraheader="AUTHORIZATION: basic {basic}" push'
+    return run_command_non_interactive(cmd, "Git push autenticado (token)", timeout_seconds, env=base_env())
 
 
 def _reader_thread(pipe, buffer, last_output_at):
@@ -204,6 +248,17 @@ def validate_environment():
             log(f"Ferramenta '{tool}': NÃO ENCONTRADA", "ERROR")
             ok = False
 
+    supabase_token, github_token = load_tokens()
+    if supabase_token:
+        log("Supabase token: OK", "SUCCESS")
+    else:
+        log("Supabase token: ausente (types pode falhar).", "WARN")
+
+    if github_token:
+        log("GitHub token: OK", "SUCCESS")
+    else:
+        log("GitHub token: ausente (push pode falhar).", "WARN")
+
     code, out, _err = run_command_non_interactive("git remote -v", "Verificando remote do Git", 10)
     if code == 0 and out.strip():
         log("Remote Git: OK", "SUCCESS")
@@ -217,12 +272,17 @@ def validate_environment():
 def gen_supabase_types(timeout_seconds):
     print(f"\n{Colors.HEADER}=== 2. SUPABASE: GERAR TYPES ==={Colors.ENDC}")
 
+    supabase_token, _github_token = load_tokens()
+    env = base_env()
+    if supabase_token:
+        env["SUPABASE_ACCESS_TOKEN"] = supabase_token
+
     cmd_yes = f"npx --yes supabase gen types typescript --project-id {PROJECT_ID} --schema public"
-    code, out, err = run_command_non_interactive(cmd_yes, "Gerando tipos TypeScript (Supabase)", timeout_seconds)
+    code, out, err = run_command_non_interactive(cmd_yes, "Gerando tipos TypeScript (Supabase)", timeout_seconds, env=env)
 
     if code != 0:
         cmd_fallback = f"npx supabase gen types typescript --project-id {PROJECT_ID} --schema public"
-        code, out, err = run_command_non_interactive(cmd_fallback, "Gerando tipos TypeScript (fallback)", timeout_seconds)
+        code, out, err = run_command_non_interactive(cmd_fallback, "Gerando tipos TypeScript (fallback)", timeout_seconds, env=env)
 
     if code == 0 and out.strip():
         os.makedirs(os.path.dirname(TYPES_OUTPUT_PATH), exist_ok=True)
@@ -239,6 +299,8 @@ def gen_supabase_types(timeout_seconds):
 
 def git_sync(timeout_push_seconds):
     print(f"\n{Colors.HEADER}=== 3. GIT: COMMIT & PUSH ==={Colors.ENDC}")
+
+    _supabase_token, github_token = load_tokens()
 
     code, status, _ = run_command_non_interactive("git status --porcelain", "Verificando alterações", 15)
     if code != 0:
@@ -263,7 +325,10 @@ def git_sync(timeout_push_seconds):
         else:
             return False
 
-    run_command_non_interactive("git push", "Git push (dispara deploy Vercel)", timeout_push_seconds, env=base_env())
+    code, _out, err = run_command_non_interactive("git push", "Git push (dispara deploy Vercel)", timeout_push_seconds, env=base_env())
+    if code != 0 and github_token:
+        if "repository not found" in (err or "").lower() or "authentication" in (err or "").lower() or "403" in (err or "").lower():
+            git_push_with_token(timeout_push_seconds, github_token)
     return True
 
 

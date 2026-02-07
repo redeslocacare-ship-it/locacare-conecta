@@ -80,10 +80,6 @@ export function PublicHeader({ onSolicitarOrcamento }: { onSolicitarOrcamento: (
                     <Button variant="hero" onClick={onSolicitarOrcamento} className="hover-lift">
                       Solicitar orçamento
                     </Button>
-
-                    <Button asChild variant="link" className="justify-start">
-                      <RouterNavLink to="/admin">Acessar área administrativa</RouterNavLink>
-                    </Button>
                   </div>
                 </SheetContent>
               </Sheet>
@@ -115,11 +111,6 @@ export function PublicHeader({ onSolicitarOrcamento }: { onSolicitarOrcamento: (
 
             <Button variant="default" onClick={onSolicitarOrcamento} className="hidden sm:inline-flex hover-lift">
               Solicitar orçamento
-            </Button>
-
-            {/* Admin (desktop) */}
-            <Button asChild variant="link" className="hidden lg:inline-flex">
-              <RouterNavLink to="/admin">Admin</RouterNavLink>
             </Button>
           </div>
         </div>

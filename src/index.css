@@ -27,17 +27,17 @@
     --popover: 0 0% 100%;
     --popover-foreground: 215 28% 12%;
 
-    /* Marca: cuidado/saúde/confiança (teal + azul) */
-    --primary: 188 72% 36%;
+    /* Marca (mais vibrante e alinhada ao logo: teal + cyan + azul) */
+    --primary: 188 82% 40%;
     --primary-foreground: 210 33% 99%;
 
-    --secondary: 214 45% 95%;
+    --secondary: 214 52% 94%;
     --secondary-foreground: 215 28% 12%;
 
     --muted: 214 35% 95%;
     --muted-foreground: 215 14% 44%;
 
-    --accent: 200 55% 92%;
+    --accent: 190 70% 92%;
     --accent-foreground: 215 28% 12%;
 
     --destructive: 0 75% 52%;
@@ -45,31 +45,34 @@
 
     --border: 214 20% 89%;
     --input: 214 20% 89%;
-    --ring: 188 72% 36%;
+    --ring: 188 82% 40%;
 
-    --radius: 0.95rem;
+    --radius: 1.05rem;
 
-    /* Extras semânticos */
-    --shadow-soft: 0 10px 30px -16px hsl(215 28% 12% / 0.18);
-    --shadow-lift: 0 20px 55px -30px hsl(215 28% 12% / 0.28);
-    --gradient-hero: radial-gradient(1200px circle at 15% 15%, hsl(188 72% 36% / 0.18), transparent 55%),
-      radial-gradient(900px circle at 85% 10%, hsl(206 78% 52% / 0.18), transparent 55%),
+    /* Assinatura visual */
+    --shadow-soft: 0 10px 30px -16px hsl(215 28% 12% / 0.16);
+    --shadow-lift: 0 24px 70px -44px hsl(188 82% 40% / 0.55);
+
+    /* Gradientes (mais chamativos, porém limpos) */
+    --gradient-hero: radial-gradient(1200px circle at 18% 18%, hsl(188 82% 40% / 0.24), transparent 55%),
+      radial-gradient(900px circle at 82% 12%, hsl(204 90% 56% / 0.22), transparent 55%),
+      radial-gradient(700px circle at 50% 90%, hsl(188 82% 40% / 0.12), transparent 55%),
       linear-gradient(180deg, hsl(210 33% 99%), hsl(210 28% 98%));
-    --gradient-shine: linear-gradient(90deg, transparent, hsl(210 33% 99% / 0.6), transparent);
+
+    --gradient-shine: linear-gradient(90deg, transparent, hsl(210 33% 99% / 0.72), transparent);
 
     /* Sidebar (admin) */
     --sidebar-background: 210 25% 98%;
     --sidebar-foreground: 215 28% 16%;
-    --sidebar-primary: 188 72% 32%;
+    --sidebar-primary: 188 82% 38%;
     --sidebar-primary-foreground: 210 33% 99%;
-    --sidebar-accent: 214 45% 95%;
+    --sidebar-accent: 190 65% 94%;
     --sidebar-accent-foreground: 215 28% 16%;
     --sidebar-border: 214 20% 89%;
-    --sidebar-ring: 188 72% 36%;
+    --sidebar-ring: 188 82% 40%;
   }
 
   .dark {
-    /* Opcional: manter um dark mode “honesto” (o app pode ficar no light por padrão) */
     --background: 215 30% 8%;
     --foreground: 210 33% 98%;
 
@@ -79,7 +82,7 @@
     --popover: 215 28% 10%;
     --popover-foreground: 210 33% 98%;
 
-    --primary: 188 75% 45%;
+    --primary: 188 86% 48%;
     --primary-foreground: 215 30% 8%;
 
     --secondary: 215 18% 16%;
@@ -96,19 +99,19 @@
 
     --border: 215 18% 18%;
     --input: 215 18% 18%;
-    --ring: 188 75% 45%;
+    --ring: 188 86% 48%;
 
     --shadow-soft: 0 10px 30px -16px hsl(0 0% 0% / 0.45);
-    --shadow-lift: 0 20px 55px -30px hsl(0 0% 0% / 0.55);
+    --shadow-lift: 0 24px 70px -44px hsl(188 86% 48% / 0.45);
 
     --sidebar-background: 215 28% 9%;
     --sidebar-foreground: 210 33% 96%;
-    --sidebar-primary: 188 75% 45%;
+    --sidebar-primary: 188 86% 48%;
     --sidebar-primary-foreground: 215 30% 8%;
     --sidebar-accent: 215 18% 16%;
     --sidebar-accent-foreground: 210 33% 96%;
     --sidebar-border: 215 18% 18%;
-    --sidebar-ring: 188 75% 45%;
+    --sidebar-ring: 188 86% 48%;
   }
 }
 
@@ -122,8 +125,35 @@
   }
 
   /* Tipografia padrão (hierarquia) */
-  h1, h2, h3 {
+  h1,
+  h2,
+  h3 {
     font-family: var(--font-display);
     letter-spacing: -0.02em;
   }
 }
+
+@layer utilities {
+  /* Micro-interações (sem hardcode de cor) */
+  .hover-lift {
+    @apply transition-transform duration-200 hover:-translate-y-0.5;
+  }
+
+  .glass {
+    @apply bg-background/60 backdrop-blur border;
+  }
+}
+
+/* Acessibilidade: respeita "reduzir movimento" do sistema */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .animate-spotlight {
+    animation: none !important;
+  }
+
+  .hover-lift {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+

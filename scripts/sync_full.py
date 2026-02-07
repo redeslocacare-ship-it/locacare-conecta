@@ -7,6 +7,8 @@ import subprocess
 import sys
 import threading
 import time
+import urllib.error
+import urllib.request
 from datetime import datetime
 
 PROJECT_ID = "wwltjlnlutnuypmkwbuy"
@@ -108,6 +110,72 @@ def load_tokens():
                     break
 
     return supabase_token.strip() if supabase_token else None, github_token.strip() if github_token else None
+
+
+def load_frontend_supabase_config():
+    url = os.environ.get("VITE_SUPABASE_URL")
+    anon = os.environ.get("VITE_SUPABASE_PUBLISHABLE_KEY")
+
+    if url and anon:
+        return url.strip().strip('"').strip("'"), anon.strip().strip('"').strip("'")
+
+    env_path = os.path.join(os.getcwd(), ".env")
+    if not os.path.exists(env_path):
+        return None, None
+
+    try:
+        with open(env_path, "r", encoding="utf-8", errors="replace") as f:
+            for raw in f.read().splitlines():
+                line = raw.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                k, v = line.split("=", 1)
+                k = k.strip()
+                v = v.strip().strip('"').strip("'")
+                if k == "VITE_SUPABASE_URL" and not url:
+                    url = v
+                elif k == "VITE_SUPABASE_PUBLISHABLE_KEY" and not anon:
+                    anon = v
+    except Exception:
+        return None, None
+
+    return url, anon
+
+
+def extract_project_ref(supabase_url: str):
+    if not supabase_url:
+        return None
+    try:
+        host = supabase_url.replace("https://", "").replace("http://", "").split("/", 1)[0]
+        if host.endswith(".supabase.co"):
+            return host.split(".", 1)[0]
+    except Exception:
+        return None
+    return None
+
+
+def supabase_table_probe(timeout_seconds: int, supabase_url: str, anon_key: str):
+    if not supabase_url or not anon_key:
+        log("Supabase URL/anon key não encontrados em .env (VITE_SUPABASE_URL/VITE_SUPABASE_PUBLISHABLE_KEY).", "WARN")
+        return None
+
+    probe_url = supabase_url.rstrip("/") + "/rest/v1/clientes?select=id&limit=1"
+    req = urllib.request.Request(
+        probe_url,
+        headers={
+            "apikey": anon_key,
+            "authorization": f"Bearer {anon_key}",
+        },
+        method="GET",
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=timeout_seconds) as resp:
+            return resp.status
+    except urllib.error.HTTPError as e:
+        return e.code
+    except Exception:
+        return None
 
 
 def git_push_with_token(timeout_seconds, token):
@@ -266,6 +334,28 @@ def validate_environment():
     else:
         log("GitHub token: ausente (push pode falhar).", "WARN")
 
+    supabase_url, supabase_anon = load_frontend_supabase_config()
+    ref_from_url = extract_project_ref(supabase_url) if supabase_url else None
+    if supabase_url:
+        log(f"Supabase URL (.env): {ref_from_url or 'desconhecido'}", "INFO")
+    else:
+        log("Supabase URL (.env): ausente", "WARN")
+
+    if ref_from_url and ref_from_url != PROJECT_ID:
+        log(f"Projeto divergente: script PROJECT_ID={PROJECT_ID} vs .env={ref_from_url}", "ERROR")
+        ok = False
+
+    probe_status = supabase_table_probe(10, supabase_url, supabase_anon)
+    if probe_status in (200, 206):
+        log("Supabase REST probe (clientes): OK", "SUCCESS")
+    elif probe_status in (401, 403):
+        log("Supabase REST probe (clientes): tabela existe, acesso bloqueado por RLS/permissão", "WARN")
+    elif probe_status == 404:
+        log("Supabase REST probe (clientes): tabela NÃO existe (schema não aplicado)", "ERROR")
+        ok = False
+    else:
+        log("Supabase REST probe (clientes): não foi possível validar", "WARN")
+
     code, out, _err = run_command_non_interactive("git remote -v", "Verificando remote do Git", 10)
     if code == 0 and out.strip():
         log("Remote Git: OK", "SUCCESS")
@@ -284,6 +374,21 @@ def gen_supabase_types(timeout_seconds):
     if supabase_token:
         env["SUPABASE_ACCESS_TOKEN"] = supabase_token
 
+    # Tenta usar DB URL para contornar erro de permissão da Platform API
+    db_url = "postgresql://postgres.wwltjlnlutnuypmkwbuy:LocaCare%402026@aws-1-us-east-1.pooler.supabase.com:6543/postgres"
+    cmd_db = f"npx supabase gen types typescript --db-url \"{db_url}\" --schema public"
+    
+    log("Tentando gerar types via conexão direta DB...", "WAIT")
+    code, out, err = run_command_non_interactive(cmd_db, "Gerando tipos TypeScript (Via DB URL)", timeout_seconds, env=env)
+    
+    if code == 0 and out.strip():
+        os.makedirs(os.path.dirname(TYPES_OUTPUT_PATH), exist_ok=True)
+        with open(TYPES_OUTPUT_PATH, "w", encoding="utf-8") as f:
+            f.write(out)
+        log(f"Arquivo atualizado (via DB): {TYPES_OUTPUT_PATH}", "SUCCESS")
+        return True
+
+    # Fallback para Platform API (Project ID)
     cmd_yes = f"npx --yes supabase gen types typescript --project-id {PROJECT_ID} --schema public"
     code, out, err = run_command_non_interactive(cmd_yes, "Gerando tipos TypeScript (Supabase)", timeout_seconds, env=env)
 

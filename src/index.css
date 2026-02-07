@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,9 +9,6 @@
   - Todos os tokens de cor em HSL
   - Evite cores “hardcoded” nos componentes (use classes semânticas)
 */
-
-/* Tipografia: import via CSS (sem mexer no index.html) */
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap");
 
 @layer base {
   :root {

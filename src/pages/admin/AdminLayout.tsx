@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { BrandLogo } from "@/components/locacare/BrandLogo";
 
 /**
  * Layout do dashboard administrativo (mobile-first).
@@ -22,7 +23,7 @@ export function AdminLayout() {
 
   async function sair() {
     await supabase.auth.signOut();
-    navigate("/", { replace: true });
+    navigate("/login", { replace: true });
   }
 
   return (
@@ -38,15 +39,18 @@ export function AdminLayout() {
               <div className="flex items-center gap-2">
                 {/* ÚNICO trigger global (requisito) */}
                 <SidebarTrigger />
-                <div className="leading-tight">
-                  <p className="text-sm font-semibold">LocaCare</p>
-                  <p className="text-xs text-muted-foreground">Painel administrativo</p>
+                <div className="flex items-center gap-3">
+                  <BrandLogo compact />
+                  <div className="leading-tight">
+                    <p className="text-sm font-semibold">LocaCare Conecta</p>
+                    <p className="text-xs text-muted-foreground">Painel administrativo</p>
+                  </div>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
                 <Button asChild variant="link" className="hidden sm:inline-flex">
-                  <a href="/" rel="noreferrer">
+                  <a href="/site" rel="noreferrer">
                     Voltar ao site
                   </a>
                 </Button>

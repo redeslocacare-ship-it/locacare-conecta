@@ -2,6 +2,7 @@ import * as React from "react";
 import { useLocation } from "react-router-dom";
 import { LayoutDashboard, Users, Armchair, Tags, ClipboardList, FileText } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
+import { BrandLogo } from "@/components/locacare/BrandLogo";
 
 import {
   Sidebar,
@@ -50,6 +51,11 @@ export function AdminSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarContent>
+        <div className="px-3 pt-3">
+          <div className="rounded-2xl border bg-background/30 p-3 shadow-soft">
+            <BrandLogo compact className="justify-center" />
+          </div>
+        </div>
         <SidebarGroup>
           <SidebarGroupLabel>Admin</SidebarGroupLabel>
           <SidebarGroupContent>

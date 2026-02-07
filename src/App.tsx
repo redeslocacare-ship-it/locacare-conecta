@@ -5,9 +5,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import AuthPage from "./pages/Auth";
+import LoginPage from "./pages/Login";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { RequireAuth } from "@/components/auth/RequireAuth";
+import { AppShell } from "@/components/layout/AppShell";
+import DashboardPage from "@/pages/Dashboard";
+import SyncPage from "@/pages/Sync";
 import { AdminLayout } from "@/pages/admin/AdminLayout";
 import AdminDashboardPage from "@/pages/admin/AdminDashboardPage";
 import ClientesPage from "@/pages/admin/ClientesPage";
@@ -26,8 +29,23 @@ const App = () => (
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/login" element={<LoginPage />} />
+
+            <Route
+              path="/"
+              element={
+                <RequireAuth>
+                  <AppShell />
+                </RequireAuth>
+              }
+            >
+              <Route index element={<DashboardPage />} />
+              <Route path="sync" element={<SyncPage />} />
+            </Route>
+
+            <Route path="/site" element={<Index />} />
+
+            <Route path="/auth" element={<Navigate to="/login" replace />} />
 
             <Route
               path="/admin"

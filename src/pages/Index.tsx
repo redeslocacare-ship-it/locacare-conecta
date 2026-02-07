@@ -1,5 +1,5 @@
 import React, { useMemo, useRef } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { ShieldCheck, Truck, Zap, HandHeart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { PublicFooter } from "@/components/locacare/PublicFooter";
 import { PreReservaForm } from "@/components/locacare/PreReservaForm";
 import { WhatsAppFloatingButton } from "@/components/locacare/WhatsAppFloatingButton";
 import { useComoFunciona, useDepoimentosPublicados, useFaqsPublicados, usePlanosAtivos } from "@/hooks/useConteudosPublicos";
+import heroPoltrona from "@/assets/hero-poltrona.jpg";
 
 /**
  * Home pública (conversão) — LocaCare
@@ -28,6 +29,10 @@ const Index = () => {
 
   const mensagem = "Olá, quero alugar uma poltrona pós-cirúrgica com a LocaCare.";
   const whatsappHref = `https://wa.me/5562936180658?text=${encodeURIComponent(mensagem)}`;
+
+  // Parallax sutil (scroll) no hero — mantemos leve e respeitamos reduced motion
+  const { scrollY } = useScroll();
+  const heroImageY = useTransform(scrollY, [0, 900], [0, -22]);
 
   const beneficios = useMemo(
     () => [
@@ -136,6 +141,19 @@ const Index = () => {
                 <div className="rounded-2xl border bg-card p-5 shadow-lift">
                   <p className="font-semibold">Produto principal</p>
                   <p className="mt-1 text-sm text-muted-foreground">Poltrona lift reclinável PU preta</p>
+
+                  <motion.div
+                    className="mt-4 overflow-hidden rounded-xl border bg-background shadow-soft"
+                    style={reduzirAnimacao ? undefined : { y: heroImageY }}
+                  >
+                    <img
+                      src={heroPoltrona}
+                      alt="Poltrona lift reclinável para pós-operatório (produto LocaCare)"
+                      className="aspect-[16/10] w-full object-cover animate-float"
+                      loading="eager"
+                      decoding="async"
+                    />
+                  </motion.div>
 
                   <div className="mt-4 rounded-xl bg-hero p-5 shadow-soft">
                     <p className="text-sm text-muted-foreground">Ideal para:</p>

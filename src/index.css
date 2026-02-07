@@ -27,8 +27,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 215 28% 12%;
 
-    /* Marca (mais vibrante e alinhada ao logo: teal + cyan + azul) */
-    --primary: 188 82% 40%;
+    /* Marca (mais vibrante e com contraste para logo branca) */
+    --primary: 190 92% 30%;
     --primary-foreground: 210 33% 99%;
 
     --secondary: 214 52% 94%;

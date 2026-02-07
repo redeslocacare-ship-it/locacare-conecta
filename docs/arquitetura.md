@@ -7,7 +7,7 @@ O sistema é dividido em duas experiências:
 1. **Site público** (rota `/`) focado em conversão.
 2. **Dashboard administrativo** (rota `/admin`) protegido por autenticação.
 
-O backend é provido pelo **Lovable Cloud**, oferecendo:
+O backend é integrado à aplicação, oferecendo:
 
 - Banco de dados PostgreSQL
 - Autenticação (e-mail/senha)

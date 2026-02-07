@@ -24,10 +24,14 @@ export function BrandLogo({
   return (
     <div className={cn("flex items-center gap-3", className)}>
       {/*
-        Logo enviada é branca: garantimos legibilidade com uma "placa"
-        usando tokens semânticos (bg-primary).
+        Logo branca com fundo primary e efeitos de destaque (ring + shadow).
       */}
-      <div className={cn("rounded-2xl bg-primary shadow-soft", paddingClasses)}>
+      <div 
+        className={cn(
+          "rounded-2xl bg-primary shadow-lift ring-2 ring-primary/40 ring-offset-2 ring-offset-background", 
+          paddingClasses
+        )}
+      >
         <img
           src={logo}
           alt="LocaCare — Cuidando do seu pós cirúrgico"

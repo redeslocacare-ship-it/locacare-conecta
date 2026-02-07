@@ -322,7 +322,20 @@ def git_sync(timeout_push_seconds):
         log("Workspace limpo. Nada para commitar.", "INFO")
         code, pending, _ = run_command_non_interactive("git cherry -v", "Verificando commits locais pendentes", 15)
         if code == 0 and pending.strip():
-            run_command_non_interactive("git push", "Enviando commits pendentes", timeout_push_seconds, env=base_env())
+            code_push, _out_push, err_push = run_command_non_interactive(
+                "git push",
+                "Enviando commits pendentes",
+                timeout_push_seconds,
+                env=base_env(),
+            )
+
+            if code_push != 0 and github_token:
+                err_l = (err_push or "").lower()
+                if "repository not found" in err_l or "authentication" in err_l or "403" in err_l:
+                    git_push_with_token(timeout_push_seconds, github_token)
+
+            if github_token:
+                git_ls_remote_with_token(20, github_token)
         return True
 
     code, _out, _err = run_command_non_interactive("git add .", "Git add", 60)

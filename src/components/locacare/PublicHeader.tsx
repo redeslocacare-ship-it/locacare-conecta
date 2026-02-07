@@ -93,8 +93,8 @@ export function PublicHeader({ onSolicitarOrcamento }: { onSolicitarOrcamento: (
           {/* Centro (logo) */}
           <div className="flex justify-center">
             <div className="relative">
-              <div className="pointer-events-none absolute -inset-3 rounded-[2rem] bg-primary/20 blur-2xl" />
-              <BrandLogo className="relative hover-lift" />
+              <div className="pointer-events-none absolute -inset-4 rounded-[2.5rem] bg-primary/20 blur-2xl" />
+              <BrandLogo size="xl" className="relative hover-lift" />
             </div>
           </div>
 

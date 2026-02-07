@@ -26,86 +26,102 @@ export function PublicHeader({ onSolicitarOrcamento }: { onSolicitarOrcamento: (
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between gap-3">
-        <div className="min-w-0">
-          <BrandLogo className="hover-lift" />
-        </div>
+      <div className="container">
+        {/*
+          Layout (md+): nav à esquerda, logo CENTRAL, ações à direita.
+          Layout (mobile): menu à esquerda, logo CENTRAL, ações à direita.
+        */}
+        <div className="grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-3">
+          {/* Esquerda */}
+          <div className="flex items-center gap-2">
+            {/* Desktop nav */}
+            <nav className="hidden items-center gap-6 md:flex">
+              {links.map((l) => (
+                <a key={l.href} className="text-sm text-muted-foreground hover:text-foreground" href={l.href}>
+                  {l.label}
+                </a>
+              ))}
+            </nav>
 
-        {/* Desktop */}
-        <nav className="hidden items-center gap-6 md:flex">
-          {links.map((l) => (
-            <a key={l.href} className="text-sm text-muted-foreground hover:text-foreground" href={l.href}>
-              {l.label}
-            </a>
-          ))}
-        </nav>
+            {/* Mobile menu */}
+            <div className="md:hidden">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="icon" className="hover-lift" aria-label="Abrir menu">
+                    <Menu />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[340px] sm:w-[380px]">
+                  <SheetHeader>
+                    <SheetTitle>
+                      <span className="sr-only">Menu</span>
+                      LocaCare
+                    </SheetTitle>
+                  </SheetHeader>
 
-        <div className="flex items-center gap-2">
-          {/* CTA WhatsApp compacto (mobile) */}
-          <Button asChild variant="soft" size="icon" className="sm:hidden hover-lift" aria-label="Chamar no WhatsApp">
-            <a href={whatsappHref} target="_blank" rel="noreferrer">
-              <MessageCircle />
-            </a>
-          </Button>
+                  <div className="mt-6 space-y-2">
+                    {links.map((l) => (
+                      <a
+                        key={l.href}
+                        className="block rounded-lg border bg-background px-4 py-3 text-sm hover:bg-accent hover-lift"
+                        href={l.href}
+                      >
+                        {l.label}
+                      </a>
+                    ))}
+                  </div>
 
-          <Button asChild variant="soft" className="hidden sm:inline-flex hover-lift">
-            <a href={whatsappHref} target="_blank" rel="noreferrer">
-              Chamar no WhatsApp
-            </a>
-          </Button>
+                  <div className="mt-6 grid gap-2">
+                    <Button asChild variant="default" className="hover-lift">
+                      <a href={whatsappHref} target="_blank" rel="noreferrer">
+                        Chamar no WhatsApp
+                      </a>
+                    </Button>
+                    <Button variant="hero" onClick={onSolicitarOrcamento} className="hover-lift">
+                      Solicitar orçamento
+                    </Button>
 
-          <Button variant="default" onClick={onSolicitarOrcamento} className="hidden sm:inline-flex hover-lift">
-            Solicitar orçamento
-          </Button>
+                    <Button asChild variant="link" className="justify-start">
+                      <RouterNavLink to="/admin">Acessar área administrativa</RouterNavLink>
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+          </div>
 
-          {/* Mobile menu */}
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="icon" className="md:hidden hover-lift" aria-label="Abrir menu">
-                <Menu />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[340px] sm:w-[380px]">
-              <SheetHeader>
-                <SheetTitle>
-                  <span className="sr-only">Menu</span>
-                  LocaCare
-                </SheetTitle>
-              </SheetHeader>
+          {/* Centro (logo) */}
+          <div className="flex justify-center">
+            <div className="relative">
+              <div className="pointer-events-none absolute -inset-3 rounded-[2rem] bg-primary/20 blur-2xl" />
+              <BrandLogo className="relative hover-lift" />
+            </div>
+          </div>
 
-              <div className="mt-6 space-y-2">
-                {links.map((l) => (
-                  <a
-                    key={l.href}
-                    className="block rounded-lg border bg-background px-4 py-3 text-sm hover:bg-accent hover-lift"
-                    href={l.href}
-                  >
-                    {l.label}
-                  </a>
-                ))}
-              </div>
+          {/* Direita (CTAs) */}
+          <div className="flex items-center justify-end gap-2">
+            {/* CTA WhatsApp compacto (mobile) */}
+            <Button asChild variant="soft" size="icon" className="sm:hidden hover-lift" aria-label="Chamar no WhatsApp">
+              <a href={whatsappHref} target="_blank" rel="noreferrer">
+                <MessageCircle />
+              </a>
+            </Button>
 
-              <div className="mt-6 grid gap-2">
-                <Button asChild variant="default" className="hover-lift">
-                  <a href={whatsappHref} target="_blank" rel="noreferrer">
-                    Chamar no WhatsApp
-                  </a>
-                </Button>
-                <Button variant="hero" onClick={onSolicitarOrcamento} className="hover-lift">
-                  Solicitar orçamento
-                </Button>
+            <Button asChild variant="soft" className="hidden sm:inline-flex hover-lift">
+              <a href={whatsappHref} target="_blank" rel="noreferrer">
+                Chamar no WhatsApp
+              </a>
+            </Button>
 
-                <Button asChild variant="link" className="justify-start">
-                  <RouterNavLink to="/admin">Acessar área administrativa</RouterNavLink>
-                </Button>
-              </div>
-            </SheetContent>
-          </Sheet>
+            <Button variant="default" onClick={onSolicitarOrcamento} className="hidden sm:inline-flex hover-lift">
+              Solicitar orçamento
+            </Button>
 
-          {/* Admin (desktop) */}
-          <Button asChild variant="link" className="hidden lg:inline-flex">
-            <RouterNavLink to="/admin">Admin</RouterNavLink>
-          </Button>
+            {/* Admin (desktop) */}
+            <Button asChild variant="link" className="hidden lg:inline-flex">
+              <RouterNavLink to="/admin">Admin</RouterNavLink>
+            </Button>
+          </div>
         </div>
       </div>
 

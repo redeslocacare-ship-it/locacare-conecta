@@ -13,6 +13,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["var(--font-sans)", "ui-sans-serif", "system-ui"],
+        display: ["var(--font-display)", "ui-serif", "Georgia"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -63,6 +67,14 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      boxShadow: {
+        soft: "var(--shadow-soft)",
+        lift: "var(--shadow-lift)",
+      },
+      backgroundImage: {
+        "hero": "var(--gradient-hero)",
+        "shine": "var(--gradient-shine)",
+      },
       keyframes: {
         "accordion-down": {
           from: {
@@ -80,10 +92,20 @@ export default {
             height: "0",
           },
         },
+        "float": {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-6px)" },
+        },
+        "spotlight": {
+          "0%": { transform: "translate(-20%, -20%) scale(0.9)", opacity: "0.6" },
+          "100%": { transform: "translate(20%, 20%) scale(1.05)", opacity: "1" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "float": "float 5.5s ease-in-out infinite",
+        "spotlight": "spotlight 9s ease-in-out infinite alternate",
       },
     },
   },

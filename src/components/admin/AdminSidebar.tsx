@@ -38,6 +38,7 @@ const itens: ItemSidebar[] = [
   { titulo: "Poltronas", url: "/admin/poltronas", icon: Armchair, end: false },
   { titulo: "Planos", url: "/admin/planos", icon: Tags, end: false },
   { titulo: "Locações", url: "/admin/locacoes", icon: ClipboardList, end: false },
+  { titulo: "Parceiros", url: "/admin/usuarios", icon: Users, end: false },
   { titulo: "Conteúdos", url: "/admin/conteudos", icon: FileText, end: false },
 ];
 

@@ -57,11 +57,44 @@ async function deploy() {
       ADD COLUMN IF NOT EXISTS codigo_indicacao_usado text;
     `);
 
+    await client.query(`
+      ALTER TABLE public.locacoes 
+      ADD COLUMN IF NOT EXISTS comprovante_url text;
+    `);
+
     // Migração: Garantir admin com código
     await client.query(`
       UPDATE public.usuarios 
       SET codigo_indicacao = 'ADMIN' 
       WHERE email = 'admin@locacare.com.br' AND codigo_indicacao IS NULL;
+    `);
+
+    // Trigger para atualizar saldo do parceiro
+    await client.query(`
+      CREATE OR REPLACE FUNCTION public.atualizar_saldo_parceiro()
+      RETURNS TRIGGER AS $$
+      BEGIN
+        -- Se o status mudou para 'confirmada' (ou inserido como confirmada)
+        IF (TG_OP = 'INSERT' AND NEW.status_locacao = 'confirmada') OR 
+           (TG_OP = 'UPDATE' AND NEW.status_locacao = 'confirmada' AND OLD.status_locacao != 'confirmada') THEN
+            
+            -- Verifica se tem código de indicação
+            IF NEW.codigo_indicacao_usado IS NOT NULL THEN
+                -- Calcula comissão (10% do valor total ou fixo se não tiver valor)
+                UPDATE public.usuarios
+                SET saldo_indicacoes = COALESCE(saldo_indicacoes, 0) + (COALESCE(NEW.valor_total, 0) * 0.10)
+                WHERE codigo_indicacao = NEW.codigo_indicacao_usado;
+            END IF;
+        END IF;
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;
+
+      DROP TRIGGER IF EXISTS trg_atualizar_saldo_parceiro ON public.locacoes;
+      CREATE TRIGGER trg_atualizar_saldo_parceiro
+      AFTER INSERT OR UPDATE ON public.locacoes
+      FOR EACH ROW
+      EXECUTE FUNCTION public.atualizar_saldo_parceiro();
     `);
 
     // Migração: Políticas RLS para leitura pública de planos (se necessário reforçar)

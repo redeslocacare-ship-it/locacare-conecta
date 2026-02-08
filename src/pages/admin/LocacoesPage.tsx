@@ -12,14 +12,19 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Eye, FileText, Link as LinkIcon, Plus, Search } from "lucide-react";
 
 /**
  * Módulo: Locações
  *
- * MVP:
- * - Lista com filtro por status
- * - Cadastro (vincula cliente + plano + poltrona)
- * - Atualização de status em lote simples
+ * Funcionalidades:
+ * - Lista em Tabela (Data Grid)
+ * - Filtros por status e busca
+ * - Cadastro completo
+ * - Atualização de status
+ * - Anexo de comprovante (Link)
  */
 
 const statusLocacao = [
@@ -43,15 +48,31 @@ const schema = z.object({
   data_inicio_prevista: z.string().optional().or(z.literal("")),
   data_fim_prevista: z.string().optional().or(z.literal("")),
   observacoes: z.string().trim().max(2000).optional().or(z.literal("")),
+  valor_total: z.string().optional().or(z.literal("")),
+  comprovante_url: z.string().trim().url("URL inválida").optional().or(z.literal("")),
+  codigo_indicacao: z.string().optional().or(z.literal("")),
 });
 
 type Valores = z.infer<typeof schema>;
 
 export default function LocacoesPage() {
-  // Status do filtro: ou "all" ("Todos"), ou um dos estados do workflow.
   const [status, setStatus] = useState<(typeof statusLocacao)[number] | "all">("all");
   const [aberto, setAberto] = useState(false);
+  const [comprovanteModal, setComprovanteModal] = useState<{ id: string, url: string | null } | null>(null);
   const qc = useQueryClient();
+
+  const { data: parceiros = [] } = useQuery({
+    queryKey: ["admin", "parceiros", "select"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("usuarios")
+        .select("id,nome,email,codigo_indicacao")
+        .not("codigo_indicacao", "is", null)
+        .order("nome", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const { data: clientes = [] } = useQuery({
     queryKey: ["admin", "clientes", "select"],
@@ -90,13 +111,13 @@ export default function LocacoesPage() {
     },
   });
 
-  const { data: locacoes = [] } = useQuery({
+  const { data: locacoes = [], isLoading } = useQuery({
     queryKey: ["admin", "locacoes", status],
     queryFn: async () => {
       let q = supabase
         .from("locacoes")
         .select(
-          "id,status_locacao,origem_lead,data_inicio_prevista,data_fim_prevista,criado_em,clientes(nome_completo,telefone_whatsapp),planos_locacao(nome_plano),poltronas(nome)",
+          "id,status_locacao,origem_lead,data_inicio_prevista,data_fim_prevista,comprovante_url,valor_total,criado_em,clientes(nome_completo,telefone_whatsapp),planos_locacao(nome_plano),poltronas(nome)",
         )
         .order("criado_em", { ascending: false })
         .limit(100);
@@ -120,6 +141,9 @@ export default function LocacoesPage() {
       data_inicio_prevista: "",
       data_fim_prevista: "",
       observacoes: "",
+      valor_total: "",
+      comprovante_url: "",
+      codigo_indicacao: "",
     },
   });
 
@@ -134,6 +158,9 @@ export default function LocacoesPage() {
         data_inicio_prevista: values.data_inicio_prevista || null,
         data_fim_prevista: values.data_fim_prevista || null,
         observacoes: values.observacoes?.trim() ? values.observacoes.trim() : null,
+        valor_total: values.valor_total ? parseFloat(values.valor_total) : 0,
+        comprovante_url: values.comprovante_url?.trim() ? values.comprovante_url.trim() : null,
+        codigo_indicacao_usado: values.codigo_indicacao || null,
       });
       if (error) throw error;
     },
@@ -156,19 +183,33 @@ export default function LocacoesPage() {
     },
   });
 
+  const salvarComprovante = useMutation({
+    mutationFn: async ({ id, url }: { id: string; url: string }) => {
+      const { error } = await supabase.from("locacoes").update({ comprovante_url: url }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Comprovante salvo.");
+      setComprovanteModal(null);
+      qc.invalidateQueries({ queryKey: ["admin", "locacoes"] });
+    },
+  });
+
   const statusOptions = useMemo(() => [{ label: "Todos", value: "all" }, ...statusLocacao.map((s) => ({ label: s, value: s }))], []);
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl">Locações</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Workflow: lead → orçamento → pagamento → uso → finalização.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Locações</h1>
+          <p className="text-muted-foreground">
+            Gerencie reservas, contratos e logística.
+          </p>
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Select value={status} onValueChange={(v) => setStatus(v as any)}>
-            <SelectTrigger className="w-[240px]">
+            <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Filtrar por status" />
             </SelectTrigger>
             <SelectContent>
@@ -182,11 +223,13 @@ export default function LocacoesPage() {
 
           <Dialog open={aberto} onOpenChange={setAberto}>
             <DialogTrigger asChild>
-              <Button>Nova locação</Button>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" /> Nova Locação
+              </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Nova locação</DialogTitle>
+                <DialogTitle>Nova Locação</DialogTitle>
               </DialogHeader>
 
               <Form {...form}>
@@ -200,7 +243,7 @@ export default function LocacoesPage() {
                         <Select value={field.value} onValueChange={field.onChange}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Selecione" />
+                              <SelectValue placeholder="Selecione um cliente" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -268,6 +311,31 @@ export default function LocacoesPage() {
 
                   <FormField
                     control={form.control}
+                    name="codigo_indicacao"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Parceiro Indicador</FormLabel>
+                        <Select value={field.value || undefined} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Opcional" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {parceiros.map((p: any) => (
+                              <SelectItem key={p.id} value={p.codigo_indicacao}>
+                                {p.nome} ({p.codigo_indicacao})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
                     name="origem_lead"
                     render={({ field }) => (
                       <FormItem>
@@ -296,7 +364,7 @@ export default function LocacoesPage() {
                     name="status_locacao"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Status</FormLabel>
+                        <FormLabel>Status Inicial</FormLabel>
                         <Select value={field.value} onValueChange={field.onChange}>
                           <FormControl>
                             <SelectTrigger>
@@ -346,21 +414,50 @@ export default function LocacoesPage() {
 
                   <FormField
                     control={form.control}
-                    name="observacoes"
+                    name="valor_total"
                     render={({ field }) => (
-                      <FormItem className="md:col-span-2">
-                        <FormLabel>Observações internas</FormLabel>
+                      <FormItem>
+                        <FormLabel>Valor Total (R$)</FormLabel>
                         <FormControl>
-                          <Textarea rows={4} {...field} />
+                          <Input type="number" step="0.01" placeholder="0,00" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
 
-                  <div className="md:col-span-2 flex justify-end">
+                  <FormField
+                    control={form.control}
+                    name="comprovante_url"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormLabel>Link do Comprovante (Opcional)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="https://..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="observacoes"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormLabel>Observações internas</FormLabel>
+                        <FormControl>
+                          <Textarea rows={3} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="md:col-span-2 flex justify-end gap-2 pt-4">
+                    <Button variant="outline" type="button" onClick={() => setAberto(false)}>Cancelar</Button>
                     <Button type="submit" disabled={criar.isPending}>
-                      {criar.isPending ? "Salvando…" : "Salvar"}
+                      {criar.isPending ? "Salvando..." : "Criar Locação"}
                     </Button>
                   </div>
                 </form>
@@ -370,63 +467,124 @@ export default function LocacoesPage() {
         </div>
       </div>
 
-      <Card className="shadow-soft">
-        <CardHeader>
-          <CardTitle className="text-xl">Lista</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {locacoes.map((l: any) => (
-              <div key={l.id} className="rounded-lg border bg-background p-3">
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="font-medium">{l.clientes?.nome_completo ?? "(sem cliente)"}</p>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={
-                        ["confirmada", "em_uso", "finalizada"].includes(l.status_locacao) ? "default" :
-                        ["cancelada"].includes(l.status_locacao) ? "destructive" : "secondary"
-                    }>
-                        {l.status_locacao}
-                    </Badge>
-                    <Select
-                      value={l.status_locacao}
-                      onValueChange={(v) => {
-                          atualizarStatus.mutate({ id: l.id, novoStatus: v as any });
-                          if (v === "confirmada") {
-                              toast.success("Pagamento confirmado! Comissão contabilizada para o parceiro.");
-                          }
-                      }}
-                    >
-                      <SelectTrigger className="h-8 w-[200px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {statusLocacao.map((s) => (
-                          <SelectItem key={s} value={s}>
-                            {s}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+      <div className="rounded-md border bg-card shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Cliente</TableHead>
+              <TableHead>Detalhes</TableHead>
+              <TableHead>Datas</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Comprovante</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+               <TableRow>
+                 <TableCell colSpan={5} className="h-24 text-center">Carregando...</TableCell>
+               </TableRow>
+            ) : locacoes.length === 0 ? (
+               <TableRow>
+                 <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">Nenhuma locação encontrada.</TableCell>
+               </TableRow>
+            ) : (
+              locacoes.map((l: any) => (
+                <TableRow key={l.id}>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{l.clientes?.nome_completo || "Sem cliente"}</span>
+                      <span className="text-xs text-muted-foreground">{l.clientes?.telefone_whatsapp}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-1 text-sm">
+                      <span>Plano: {l.planos_locacao?.nome_plano || "—"}</span>
+                      <span className="text-muted-foreground">Poltrona: {l.poltronas?.nome || "—"}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col text-xs text-muted-foreground">
+                      <span>Início: {l.data_inicio_prevista ? new Date(l.data_inicio_prevista).toLocaleDateString("pt-BR") : "—"}</span>
+                      <span>Fim: {l.data_fim_prevista ? new Date(l.data_fim_prevista).toLocaleDateString("pt-BR") : "—"}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                        <Select
+                          value={l.status_locacao}
+                          onValueChange={(v) => {
+                              atualizarStatus.mutate({ id: l.id, novoStatus: v as any });
+                              if (v === "confirmada") {
+                                  toast.success("Pagamento confirmado! Comissão liberada.");
+                              }
+                          }}
+                        >
+                          <SelectTrigger className="h-8 w-[140px] text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {statusLocacao.map((s) => (
+                              <SelectItem key={s} value={s}>
+                                {s}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {l.comprovante_url ? (
+                      <Button variant="ghost" size="sm" asChild>
+                        <a href={l.comprovante_url} target="_blank" rel="noopener noreferrer">
+                          <LinkIcon className="h-4 w-4 mr-1" /> Ver
+                        </a>
+                      </Button>
+                    ) : (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-muted-foreground"
+                        onClick={() => setComprovanteModal({ id: l.id, url: "" })}
+                      >
+                        <Plus className="h-4 w-4 mr-1" /> Add
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
-                <p className="text-xs text-muted-foreground">
-                  {l.clientes?.telefone_whatsapp ?? ""} • Origem: {l.origem_lead}
-                </p>
-
-                <p className="text-xs text-muted-foreground">
-                  Plano: {l.planos_locacao?.nome_plano ?? "—"} • Poltrona: {l.poltronas?.nome ?? "—"}
-                </p>
-
-                <p className="text-xs text-muted-foreground">
-                  Previsto: {l.data_inicio_prevista ?? "—"} → {l.data_fim_prevista ?? "—"}
-                </p>
-              </div>
-            ))}
-            {locacoes.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma locação encontrada.</p> : null}
+      {/* Modal para Adicionar Comprovante */}
+      <Dialog open={!!comprovanteModal} onOpenChange={(open) => !open && setComprovanteModal(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Adicionar Comprovante</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Link do Arquivo (Drive, PDF, Imagem)</label>
+              <Input 
+                placeholder="https://..." 
+                value={comprovanteModal?.url || ""} 
+                onChange={(e) => setComprovanteModal(prev => prev ? { ...prev, url: e.target.value } : null)}
+              />
+            </div>
+            <Button 
+              className="w-full" 
+              onClick={() => {
+                if (comprovanteModal?.id && comprovanteModal?.url) {
+                  salvarComprovante.mutate({ id: comprovanteModal.id, url: comprovanteModal.url });
+                }
+              }}
+            >
+              Salvar Link
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

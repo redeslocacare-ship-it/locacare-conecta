@@ -144,8 +144,19 @@ export default function DashboardPage() {
                 {referralStats?.totalEarnings.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
               </CardTitle>
             </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              Disponível para saque
+            <CardContent className="space-y-3">
+              <p className="text-sm text-muted-foreground">Disponível para saque</p>
+              {referralStats && referralStats.totalEarnings > 0 && (
+                <Button variant="outline" size="sm" className="w-full text-xs" asChild>
+                  <a
+                    href={`https://wa.me/5562999999999?text=Olá, gostaria de solicitar o saque das minhas comissões. Código: ${referralStats.code}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Solicitar Saque
+                  </a>
+                </Button>
+              )}
             </CardContent>
           </Card>
 

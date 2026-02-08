@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Activity, ArrowRight, Database, LayoutDashboard, Wrench } from "lucide-react";
+import { Activity, ArrowRight, Database, LayoutDashboard, Wrench, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,10 @@ type Health = {
   auth: "ok" | "erro";
   db: "ok" | "erro";
   url: string;
+  referral: {
+    code: string | null;
+    balance: number;
+  };
 };
 
 async function checkHealth(): Promise<Health> {
@@ -21,7 +25,24 @@ async function checkHealth(): Promise<Health> {
   const { error: dbError } = await supabase.from("planos_locacao").select("id").limit(1);
   const db: Health["db"] = dbError ? "erro" : "ok";
 
-  return { auth, db, url };
+  // Fetch referral info
+  let referral = { code: null, balance: 0 };
+  if (auth === "ok" && sessionData.session?.user) {
+    const { data: userData } = await supabase
+      .from("usuarios")
+      .select("codigo_indicacao, saldo_indicacoes")
+      .eq("user_id", sessionData.session.user.id)
+      .single();
+    
+    if (userData) {
+      referral = {
+        code: userData.codigo_indicacao,
+        balance: Number(userData.saldo_indicacoes || 0)
+      };
+    }
+  }
+
+  return { auth, db, url, referral };
 }
 
 export default function DashboardPage() {
@@ -34,6 +55,8 @@ export default function DashboardPage() {
   const statusGeral = useMemo(() => {
     if (!data) return "Verificando integrações…";
     if (data.auth === "ok" && data.db === "ok") return "Sistema operacional";
+    if (data.auth === "erro") return "Erro de Autenticação";
+    if (data.db === "erro") return "Erro de Banco de Dados (RLS/Conexão)";
     return "Atenção: verifique integrações";
   }, [data]);
 
@@ -59,7 +82,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
+        <div className="mt-6 grid gap-4 md:grid-cols-4">
           <Card className="bg-background/30 shadow-soft">
             <CardHeader className="space-y-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -70,6 +93,19 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
               {data?.url ? <p className="truncate">Supabase: {data.url}</p> : <p>Supabase: não configurado</p>}
+            </CardContent>
+          </Card>
+
+          <Card className="bg-background/30 shadow-soft">
+            <CardHeader className="space-y-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Share2 className="h-4 w-4" />
+                Indicação
+              </div>
+              <CardTitle className="text-xl">{data?.referral?.code || "-"}</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              <p>Saldo: {data?.referral?.balance.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
             </CardContent>
           </Card>
 

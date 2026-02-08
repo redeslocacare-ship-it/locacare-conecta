@@ -29,10 +29,11 @@ const App = () => (
       <AuthProvider>
         <BrowserRouter>
           <Routes>
+            <Route path="/" element={<Index />} />
             <Route path="/login" element={<LoginPage />} />
 
             <Route
-              path="/"
+              path="/app"
               element={
                 <RequireAuth>
                   <AppShell />
@@ -43,7 +44,7 @@ const App = () => (
               <Route path="sync" element={<SyncPage />} />
             </Route>
 
-            <Route path="/site" element={<Index />} />
+            {/* <Route path="/site" element={<Index />} /> */}
 
             <Route path="/auth" element={<Navigate to="/login" replace />} />
 

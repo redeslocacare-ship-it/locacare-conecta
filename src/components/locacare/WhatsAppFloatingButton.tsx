@@ -12,10 +12,11 @@ export function WhatsAppFloatingButton() {
   const href = `https://wa.me/5562936180658?text=${encodeURIComponent(mensagem)}`;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
-      <Button asChild variant="default" size="icon" className="rounded-full shadow-lift">
+    <div className="fixed bottom-6 right-6 z-50">
+      <Button asChild variant="default" size="icon" className="h-14 w-14 rounded-full shadow-xl shadow-green-500/30 bg-green-500 hover:bg-green-600 border-none animate-bounce-slow relative group">
         <a href={href} target="_blank" rel="noreferrer" aria-label="Chamar no WhatsApp">
-          <MessageCircle />
+          <span className="absolute -inset-2 rounded-full bg-green-500 opacity-20 group-hover:animate-ping"></span>
+          <MessageCircle className="h-7 w-7 text-white" />
         </a>
       </Button>
     </div>

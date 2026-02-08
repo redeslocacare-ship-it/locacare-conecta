@@ -366,8 +366,32 @@ def validate_environment():
     return ok
 
 
+def deploy_database(timeout_seconds):
+    print(f"\n{Colors.HEADER}=== 2. SUPABASE: DEPLOY SCHEMA & MIGRATIONS ==={Colors.ENDC}")
+    
+    # Executa o script Node.js unificado
+    cmd = "node scripts/deploy_schema.js"
+    log("Executando scripts de banco (deploy_schema.js)...", "WAIT")
+    
+    code, out, err = run_command_non_interactive(cmd, "Aplicando migrações no Banco", timeout_seconds, env=base_env())
+    
+    if code == 0:
+        log("Banco de dados atualizado com sucesso.", "SUCCESS")
+        if out.strip():
+            # Mostra logs relevantes do script node
+            for line in out.splitlines():
+                if "✅" in line or "🚀" in line or "📦" in line:
+                    print(f"      {Colors.CYAN}{line.strip()}{Colors.ENDC}")
+        return True
+    else:
+        log("Falha na atualização do banco.", "ERROR")
+        if err.strip():
+            log(err.strip()[:800], "WARN")
+        return False
+
+
 def gen_supabase_types(timeout_seconds):
-    print(f"\n{Colors.HEADER}=== 2. SUPABASE: GERAR TYPES ==={Colors.ENDC}")
+    print(f"\n{Colors.HEADER}=== 3. SUPABASE: GERAR TYPES ==={Colors.ENDC}")
 
     supabase_token, _github_token = load_tokens()
     env = base_env()
@@ -415,7 +439,7 @@ def gen_supabase_types(timeout_seconds):
 
 
 def git_sync(timeout_push_seconds):
-    print(f"\n{Colors.HEADER}=== 3. GIT: COMMIT & PUSH ==={Colors.ENDC}")
+    print(f"\n{Colors.HEADER}=== 4. GIT: COMMIT & PUSH ==={Colors.ENDC}")
 
     _supabase_token, github_token = load_tokens()
 
@@ -495,6 +519,16 @@ def main():
         if args.check_only:
             log("Check concluído.", "SUCCESS")
             return
+
+        # Etapa de Deploy de Banco (NOVA)
+        if not args.skip_types: # Usamos a flag skip-types para pular tudo relacionado a banco se quiser
+            ok_db = deploy_database(args.timeout_network)
+            if not ok_db:
+                if not args.force:
+                    log("Abortando sync devido a erro no banco. Use --force para ignorar.", "ERROR")
+                    return
+                else:
+                    log("Ignorando erro de banco (modo force).", "WARN")
 
         if not args.skip_types:
             ok_types = gen_supabase_types(args.timeout_network)

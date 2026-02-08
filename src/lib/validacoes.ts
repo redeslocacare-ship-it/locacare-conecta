@@ -24,6 +24,7 @@ export const leadSchema = z.object({
   tipo_cirurgia: z.string().trim().max(120, "Texto muito longo").optional().or(z.literal("")),
   data_inicio_desejada: z.string().trim().optional().or(z.literal("")),
   mensagem: z.string().trim().max(1000, "Mensagem muito longa").optional().or(z.literal("")),
+  codigo_indicacao: z.string().trim().max(50, "Código inválido").optional().or(z.literal("")),
 });
 
 export type LeadFormValues = z.infer<typeof leadSchema>;

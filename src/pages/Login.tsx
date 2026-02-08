@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -21,7 +21,7 @@ type Valores = z.infer<typeof schema>;
 
 export default function LoginPage() {
   const { user, carregando } = useAuth();
-  const [modo, setModo] = useState<"login" | "cadastro">("login");
+  // const [modo, setModo] = useState<"login" | "cadastro">("login");
   const [enviando, setEnviando] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -32,38 +32,23 @@ export default function LoginPage() {
     defaultValues: { email: "", senha: "" },
   });
 
-  const titulo = useMemo(() => (modo === "login" ? "Entrar" : "Criar conta"), [modo]);
+  const titulo = "Entrar";
 
   if (!carregando && user) {
-    return <Navigate to={from || "/"} replace />;
+    return <Navigate to={from || "/app"} replace />;
   }
 
   async function onSubmit(values: Valores) {
     setEnviando(true);
     try {
-      if (modo === "login") {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: values.email,
-          password: values.senha,
-        });
-        if (error) throw error;
+      const { error } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.senha,
+      });
+      if (error) throw error;
 
-        toast.success("Bem-vindo(a)!\nVocê entrou com sucesso.");
-        navigate(from || "/", { replace: true });
-      } else {
-        const redirectUrl = `${window.location.origin}/`;
-        const { error } = await supabase.auth.signUp({
-          email: values.email,
-          password: values.senha,
-          options: { emailRedirectTo: redirectUrl },
-        });
-        if (error) throw error;
-
-        toast.success(
-          "Cadastro enviado!\nSe a confirmação de e-mail estiver ativa, verifique sua caixa de entrada para concluir.",
-        );
-        setModo("login");
-      }
+      toast.success("Bem-vindo(a)!\nVocê entrou com sucesso.");
+      navigate(from || "/app", { replace: true });
     } catch (e: any) {
       const msg = String(e?.message || "Erro de autenticação");
       toast.error(msg);
@@ -111,7 +96,7 @@ export default function LoginPage() {
                         <FormControl>
                           <Input
                             type="password"
-                            autoComplete={modo === "login" ? "current-password" : "new-password"}
+                            autoComplete="current-password"
                             {...field}
                           />
                         </FormControl>
@@ -121,33 +106,13 @@ export default function LoginPage() {
                   />
 
                   <Button className="w-full" type="submit" disabled={enviando}>
-                    {enviando ? "Aguarde…" : modo === "login" ? "Entrar" : "Criar conta"}
+                    {enviando ? "Aguarde…" : "Entrar"}
                   </Button>
-
-                  <div className="text-center text-sm text-muted-foreground">
-                    {modo === "login" ? (
-                      <button
-                        type="button"
-                        className="underline-offset-4 hover:underline"
-                        onClick={() => setModo("cadastro")}
-                      >
-                        Não tem conta? Cadastre-se
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        className="underline-offset-4 hover:underline"
-                        onClick={() => setModo("login")}
-                      >
-                        Já tem conta? Fazer login
-                      </button>
-                    )}
-                  </div>
                 </form>
               </Form>
 
               <p className="mt-6 text-xs text-muted-foreground">
-                Se estiver em teste e o login falhar no cadastro, verifique no Supabase Auth se a confirmação de e-mail está ativa.
+                Se estiver em teste e o login falhar, verifique se o usuário foi criado no script de setup.
               </p>
             </CardContent>
           </Card>

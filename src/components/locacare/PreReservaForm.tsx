@@ -45,6 +45,7 @@ export function PreReservaForm({ id }: { id: string }) {
       tipo_cirurgia: "",
       data_inicio_desejada: "",
       mensagem: "",
+      codigo_indicacao: "",
     },
   });
 
@@ -82,6 +83,7 @@ export function PreReservaForm({ id }: { id: string }) {
         origem_lead: "site",
         status_locacao: "lead",
         data_inicio_prevista: values.data_inicio_desejada?.trim() ? values.data_inicio_desejada : null,
+        codigo_indicacao_usado: values.codigo_indicacao?.trim() || null,
       });
 
       if (erroLocacao) throw erroLocacao;
@@ -210,6 +212,24 @@ export function PreReservaForm({ id }: { id: string }) {
                       <FormLabel>Data da cirurgia / início desejado</FormLabel>
                       <FormControl>
                         <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="codigo_indicacao"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Código de Indicação (Opcional)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Cupom ou código" 
+                          {...field} 
+                          className="border-dashed border-primary/50 bg-primary/5 focus:border-solid focus:bg-background transition-all"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

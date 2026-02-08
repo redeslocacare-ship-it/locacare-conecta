@@ -21,112 +21,92 @@ export function PublicHeader({ onSolicitarOrcamento }: { onSolicitarOrcamento: (
     { label: "Benefícios", href: "#beneficios" },
     { label: "Como funciona", href: "#como-funciona" },
     { label: "FAQ", href: "#faq" },
-    { label: "Pré-reserva", href: "#contato" },
   ];
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container">
-        {/*
-          Layout (md+): nav à esquerda, logo CENTRAL, ações à direita.
-          Layout (mobile): menu à esquerda, logo CENTRAL, ações à direita.
-        */}
-        <div className="grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-3">
-          {/* Esquerda */}
-          <div className="flex items-center gap-2">
-            {/* Desktop nav */}
-            <nav className="hidden items-center gap-6 md:flex">
-              {links.map((l) => (
-                <a key={l.href} className="text-sm text-muted-foreground hover:text-foreground" href={l.href}>
-                  {l.label}
-                </a>
-              ))}
-            </nav>
-
-            {/* Mobile menu */}
-            <div className="md:hidden">
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="outline" size="icon" className="hover-lift" aria-label="Abrir menu">
-                    <Menu />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-[340px] sm:w-[380px]">
-                  <SheetHeader>
-                    <SheetTitle>
-                      <span className="sr-only">Menu</span>
-                      LocaCare
-                    </SheetTitle>
-                  </SheetHeader>
-
-                  <div className="mt-6 space-y-2">
-                    {links.map((l) => (
-                      <a
-                        key={l.href}
-                        className="block rounded-lg border bg-background px-4 py-3 text-sm hover:bg-accent hover-lift"
-                        href={l.href}
-                      >
-                        {l.label}
-                      </a>
-                    ))}
-                  </div>
-
-                  <div className="mt-6 grid gap-2">
-                    <Button asChild variant="default" className="hover-lift">
-                      <a href={whatsappHref} target="_blank" rel="noreferrer">
-                        Chamar no WhatsApp
-                      </a>
-                    </Button>
-                    <Button variant="hero" onClick={onSolicitarOrcamento} className="hover-lift">
-                      Solicitar orçamento
-                    </Button>
-                  </div>
-                </SheetContent>
-              </Sheet>
-            </div>
-          </div>
-
-          {/* Centro (logo) */}
-          <div className="flex justify-center">
-            <BrandLogo 
-              size="xl" 
-              className="hover-lift drop-shadow-[0_0_25px_rgba(20,184,166,0.4)] transition-all duration-300 hover:drop-shadow-[0_0_35px_rgba(20,184,166,0.6)]" 
-            />
-          </div>
-
-          {/* Direita (CTAs) */}
-          <div className="flex items-center justify-end gap-2">
-            {/* CTA WhatsApp compacto (mobile) */}
-            <Button asChild variant="soft" size="icon" className="sm:hidden hover-lift" aria-label="Chamar no WhatsApp">
-              <a href={whatsappHref} target="_blank" rel="noreferrer">
-                <MessageCircle />
-              </a>
-            </Button>
-
-            <Button asChild variant="soft" className="hidden sm:inline-flex hover-lift">
-              <a href={whatsappHref} target="_blank" rel="noreferrer">
-                Chamar no WhatsApp
-              </a>
-            </Button>
-
-            <Button variant="default" onClick={onSolicitarOrcamento} className="hidden sm:inline-flex hover-lift">
-              Solicitar orçamento
-            </Button>
-          </div>
+    <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-20 items-center justify-between">
+        
+        {/* Logo (Esquerda) */}
+        <div className="flex-shrink-0">
+          <BrandLogo 
+            size="2xl" 
+            className="hover-lift drop-shadow-[0_0_20px_rgba(20,184,166,0.6)] transition-all duration-500 hover:drop-shadow-[0_0_30px_rgba(20,184,166,0.8)] hover:scale-105" 
+          />
         </div>
-      </div>
 
-      {/* Barra de CTA fixa no mobile (melhor conversão) */}
-      <div className="border-t bg-background/70 backdrop-blur md:hidden">
-        <div className="container flex items-center gap-2 py-2">
-          <Button asChild className="flex-1 hover-lift">
-            <a href={whatsappHref} target="_blank" rel="noreferrer">
-              WhatsApp
+        {/* Desktop Nav (Centro) */}
+        <nav className="hidden md:flex items-center gap-10">
+          {links.map((l) => (
+            <a 
+              key={l.href} 
+              className="text-base font-semibold tracking-wide text-muted-foreground transition-all hover:text-primary relative group py-2" 
+              href={l.href}
+            >
+              {l.label}
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-primary to-secondary transition-all duration-300 group-hover:w-full"></span>
             </a>
+          ))}
+        </nav>
+
+        {/* Ações (Direita) */}
+        <div className="flex items-center gap-6">
+          <Button variant="ghost" asChild className="hidden md:inline-flex text-base hover:bg-primary/5 hover:text-primary transition-colors">
+             <RouterNavLink to="/login">Área do Parceiro</RouterNavLink>
           </Button>
-          <Button variant="hero" className="flex-1 hover-lift" onClick={onSolicitarOrcamento}>
-            Orçamento
+
+          <Button 
+            variant="hero" 
+            onClick={onSolicitarOrcamento} 
+            className="hidden md:inline-flex shadow-[0_0_20px_rgba(20,184,166,0.3)] hover:shadow-[0_0_30px_rgba(20,184,166,0.5)] transition-all duration-300 animate-pulse-slow text-base px-6 h-12"
+          >
+            Solicitar Orçamento
           </Button>
+
+          {/* Mobile Menu Trigger */}
+          <div className="md:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon" className="border-primary/20 hover:bg-primary/5">
+                  <Menu className="h-6 w-6 text-primary" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] sm:w-[350px] border-l-primary/10">
+                <SheetHeader className="text-left border-b pb-4 mb-4">
+                  <BrandLogo size="lg" />
+                </SheetHeader>
+
+                <div className="flex flex-col gap-2">
+                  {links.map((l) => (
+                    <a
+                      key={l.href}
+                      className="block rounded-md px-4 py-3 text-base font-medium text-foreground/80 hover:bg-primary/5 hover:text-primary transition-colors"
+                      href={l.href}
+                    >
+                      {l.label}
+                    </a>
+                  ))}
+                  <RouterNavLink 
+                    to="/login"
+                    className="block rounded-md px-4 py-3 text-base font-medium text-foreground/80 hover:bg-primary/5 hover:text-primary transition-colors"
+                  >
+                    Área do Parceiro
+                  </RouterNavLink>
+                </div>
+
+                <div className="mt-8 space-y-3">
+                  <Button asChild variant="outline" className="w-full justify-start gap-2 border-green-500/20 text-green-600 hover:bg-green-50 hover:text-green-700">
+                    <a href={whatsappHref} target="_blank" rel="noreferrer">
+                      <MessageCircle className="h-4 w-4" /> WhatsApp
+                    </a>
+                  </Button>
+                  <Button variant="hero" onClick={onSolicitarOrcamento} className="w-full shadow-md">
+                    Solicitar orçamento
+                  </Button>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </div>
     </header>

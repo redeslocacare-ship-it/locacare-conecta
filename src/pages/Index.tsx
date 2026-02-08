@@ -147,22 +147,14 @@ const Index = () => {
 
                 {/* Prova social */}
                 <motion.div
-                  className="mt-7 grid gap-3 sm:grid-cols-3"
+                  className="mt-7 flex flex-wrap gap-3"
                   variants={containerVariants}
                   initial={reduzirAnimacao ? false : "hidden"}
                   animate={reduzirAnimacao ? undefined : "show"}
                 >
                   <motion.div variants={itemVariants} className="rounded-xl border glass p-4 shadow-soft">
-                    <p className="text-xl font-semibold leading-none">4,9/5</p>
-                    <p className="mt-1 text-sm text-muted-foreground">Avaliações</p>
-                  </motion.div>
-                  <motion.div variants={itemVariants} className="rounded-xl border glass p-4 shadow-soft">
                     <p className="text-xl font-semibold leading-none">Até 24h</p>
                     <p className="mt-1 text-sm text-muted-foreground">Entrega (Goiânia)</p>
-                  </motion.div>
-                  <motion.div variants={itemVariants} className="rounded-xl border glass p-4 shadow-soft">
-                    <p className="text-xl font-semibold leading-none">300+</p>
-                    <p className="mt-1 text-sm text-muted-foreground">Famílias atendidas</p>
                   </motion.div>
                 </motion.div>
 
@@ -284,64 +276,63 @@ const Index = () => {
           </div>
         </section>
 
-        {/* COMO FUNCIONA */}
-        <section id="como-funciona" className="container py-14 scroll-mt-24">
-          <h2 className="text-3xl md:text-4xl">Como funciona a locação</h2>
-          <p className="mt-2 text-muted-foreground">Passo a passo simples (editável no banco).</p>
-
-          <div className="mt-8 grid gap-4 md:grid-cols-5">
-            {(passos.length ? passos : [{ titulo: "Carregando…", descricao: "" }]).map((p, idx) => (
-              <div
-                key={`${p.titulo}-${idx}`}
-                className="rounded-2xl border bg-card/70 p-5 shadow-soft hover-lift backdrop-blur md:col-span-1"
-              >
-                <p className="text-xs text-muted-foreground">Passo {idx + 1}</p>
-                <p className="mt-2 font-semibold">{p.titulo}</p>
-                <p className="mt-2 text-sm text-muted-foreground">{p.descricao}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <SectionDivider className="text-card" />
-
-        {/* PARA QUEM É INDICADO */}
-        <section className="container py-14">
-          <div className="grid gap-8 rounded-3xl border bg-card/70 p-8 shadow-lift backdrop-blur md:grid-cols-2">
+        {/* PARA QUEM É INDICADO (REDESENHADO) */}
+        <section className="container py-16 relative">
+          <div className="absolute inset-0 bg-primary/5 -skew-y-3 transform origin-left z-0" />
+          <div className="relative z-10 grid gap-12 md:grid-cols-2 items-center">
             <div>
-              <h2 className="text-3xl md:text-4xl">Para quem é indicado</h2>
-              <p className="mt-2 text-muted-foreground">Apoio essencial nos primeiros dias de recuperação.</p>
+              <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary mb-4">
+                <Sparkles className="h-3 w-3" />
+                Público Alvo
+              </div>
+              <h2 className="text-4xl md:text-5xl font-bold leading-tight mb-6">
+                Recuperação mais rápida e <span className="text-primary">confortável</span>
+              </h2>
+              <p className="text-lg text-muted-foreground mb-8">
+                A poltrona lift é essencial para quem precisa de autonomia e segurança nos momentos mais delicados do pós-operatório.
+              </p>
+              
+              <div className="grid gap-4">
+                {[
+                  "Cirurgias Plásticas (Abdominoplastia, Lipo, Mama)",
+                  "Cirurgias Ortopédicas (Coluna, Joelho, Quadril)",
+                  "Idosos com mobilidade reduzida",
+                  "Gestantes e lactantes (conforto na amamentação)"
+                ].map((item, i) => (
+                  <motion.div 
+                    key={i}
+                    className="flex items-center gap-4 p-4 rounded-xl bg-card/50 border border-primary/10 hover:border-primary/30 transition-colors"
+                    whileHover={{ x: 5 }}
+                  >
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                      <ShieldCheck className="h-5 w-5" />
+                    </div>
+                    <span className="font-medium">{item}</span>
+                  </motion.div>
+                ))}
+              </div>
             </div>
-            <ul className="grid gap-3 text-sm">
-              <li className="rounded-2xl border bg-background/30 p-4 shadow-soft hover-lift">Cirurgias plásticas (abdômen, mama, lipo)</li>
-              <li className="rounded-2xl border bg-background/30 p-4 shadow-soft hover-lift">Cirurgias ortopédicas (coluna, ombro, joelho)</li>
-              <li className="rounded-2xl border bg-background/30 p-4 shadow-soft hover-lift">Idosos com dificuldade de mobilidade</li>
-              <li className="rounded-2xl border bg-background/30 p-4 shadow-soft hover-lift">Pacientes com dor ou restrição para deitar/levantar</li>
-            </ul>
-          </div>
-        </section>
-
-        {/* DEPOIMENTOS */}
-        <section className="container py-14">
-          <h2 className="text-3xl md:text-4xl">Depoimentos</h2>
-          <p className="mt-2 text-muted-foreground">Experiências reais de quem já alugou com a LocaCare.</p>
-
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {depoimentos.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Sem depoimentos publicados ainda.</p>
-            ) : (
-              depoimentos.map((d) => (
-                <Card key={d.id} className="shadow-soft hover-lift bg-card/70 backdrop-blur">
-                  <CardHeader>
-                    <CardTitle className="text-xl">{d.nome_cliente}</CardTitle>
-                    {d.cidade ? <p className="text-sm text-muted-foreground">{d.cidade}</p> : null}
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">“{d.texto_depoimento}”</p>
-                  </CardContent>
-                </Card>
-              ))
-            )}
+            
+            <div className="relative">
+              <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-[2rem] blur-3xl opacity-50" />
+              <div className="relative aspect-square rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl">
+                <img 
+                  src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800" 
+                  alt="Conforto e recuperação" 
+                  className="object-cover w-full h-full"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                <div className="absolute bottom-6 left-6 right-6">
+                  <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
+                    <p className="text-white font-medium">"Foi fundamental na minha recuperação."</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className="flex text-yellow-400">★★★★★</div>
+                      <span className="text-white/60 text-sm">Cliente Verificada</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 

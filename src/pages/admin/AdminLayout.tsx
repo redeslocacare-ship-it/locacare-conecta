@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
@@ -20,6 +21,22 @@ import { BrandLogo } from "@/components/locacare/BrandLogo";
  */
 export function AdminLayout() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      // Simple admin check by email for MVP
+      const isAdmin = session.user.email === "admin@locacare.com.br";
+      
+      if (!isAdmin) {
+        toast.error("Acesso negado. Apenas administradores.");
+        navigate("/app");
+      }
+    };
+    checkAdmin();
+  }, [navigate]);
 
   async function sair() {
     await supabase.auth.signOut();

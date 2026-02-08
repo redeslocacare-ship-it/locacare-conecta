@@ -381,10 +381,20 @@ export default function LocacoesPage() {
                 <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                   <p className="font-medium">{l.clientes?.nome_completo ?? "(sem cliente)"}</p>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">{l.status_locacao}</span>
+                    <Badge variant={
+                        ["confirmada", "em_uso", "finalizada"].includes(l.status_locacao) ? "default" :
+                        ["cancelada"].includes(l.status_locacao) ? "destructive" : "secondary"
+                    }>
+                        {l.status_locacao}
+                    </Badge>
                     <Select
                       value={l.status_locacao}
-                      onValueChange={(v) => atualizarStatus.mutate({ id: l.id, novoStatus: v as any })}
+                      onValueChange={(v) => {
+                          atualizarStatus.mutate({ id: l.id, novoStatus: v as any });
+                          if (v === "confirmada") {
+                              toast.success("Pagamento confirmado! Comissão contabilizada para o parceiro.");
+                          }
+                      }}
                     >
                       <SelectTrigger className="h-8 w-[200px]">
                         <SelectValue />

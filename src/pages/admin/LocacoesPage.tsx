@@ -48,8 +48,8 @@ const schema = z.object({
 type Valores = z.infer<typeof schema>;
 
 export default function LocacoesPage() {
-  // Status do filtro: ou vazio ("Todos"), ou um dos estados do workflow.
-  const [status, setStatus] = useState<(typeof statusLocacao)[number] | "">("");
+  // Status do filtro: ou "all" ("Todos"), ou um dos estados do workflow.
+  const [status, setStatus] = useState<(typeof statusLocacao)[number] | "all">("all");
   const [aberto, setAberto] = useState(false);
   const qc = useQueryClient();
 
@@ -101,7 +101,7 @@ export default function LocacoesPage() {
         .order("criado_em", { ascending: false })
         .limit(100);
 
-      if (status) q = q.eq("status_locacao", status);
+      if (status && status !== "all") q = q.eq("status_locacao", status);
 
       const { data, error } = await q;
       if (error) throw error;
@@ -156,7 +156,7 @@ export default function LocacoesPage() {
     },
   });
 
-  const statusOptions = useMemo(() => [{ label: "Todos", value: "" }, ...statusLocacao.map((s) => ({ label: s, value: s }))], []);
+  const statusOptions = useMemo(() => [{ label: "Todos", value: "all" }, ...statusLocacao.map((s) => ({ label: s, value: s }))], []);
 
   return (
     <div className="space-y-6">
@@ -173,7 +173,7 @@ export default function LocacoesPage() {
             </SelectTrigger>
             <SelectContent>
               {statusOptions.map((o) => (
-                <SelectItem key={o.value || "todos"} value={o.value}>
+                <SelectItem key={o.value} value={o.value}>
                   {o.label}
                 </SelectItem>
               ))}
@@ -222,7 +222,7 @@ export default function LocacoesPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Plano</FormLabel>
-                        <Select value={field.value || ""} onValueChange={field.onChange}>
+                        <Select value={field.value || undefined} onValueChange={field.onChange}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Opcional" />
@@ -247,7 +247,7 @@ export default function LocacoesPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Poltrona</FormLabel>
-                        <Select value={field.value || ""} onValueChange={field.onChange}>
+                        <Select value={field.value || undefined} onValueChange={field.onChange}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Opcional" />

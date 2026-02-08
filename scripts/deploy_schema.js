@@ -103,6 +103,18 @@ async function deploy() {
         DROP POLICY IF EXISTS "Admin access planos" ON planos_locacao;
         CREATE POLICY "Admin access planos" ON planos_locacao FOR ALL USING (auth.role() = 'authenticated');
 
+        DROP POLICY IF EXISTS "Admin access depoimentos" ON depoimentos;
+        CREATE POLICY "Admin access depoimentos" ON depoimentos FOR ALL USING (auth.role() = 'authenticated');
+
+        DROP POLICY IF EXISTS "Admin access faqs" ON faqs;
+        CREATE POLICY "Admin access faqs" ON faqs FOR ALL USING (auth.role() = 'authenticated');
+
+        DROP POLICY IF EXISTS "Admin access conteudos" ON conteudos_site;
+        CREATE POLICY "Admin access conteudos" ON conteudos_site FOR ALL USING (auth.role() = 'authenticated');
+
+        DROP POLICY IF EXISTS "Admin access usuarios" ON usuarios;
+        CREATE POLICY "Admin access usuarios" ON usuarios FOR ALL USING (auth.role() = 'authenticated');
+
       END $$;
     `);
 

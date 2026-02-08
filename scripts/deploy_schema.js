@@ -9,14 +9,15 @@ const __dirname = path.dirname(__filename);
 
 // Connection string from cre.txt
 // Nota: Em produção real, isso deveria vir de variável de ambiente, mas para este script local mantemos a consistência com cre.txt
-const connectionString = 'postgresql://postgres.wwltjlnlutnuypmkwbuy:LocaCare%402026@aws-1-us-east-1.pooler.supabase.com:6543/postgres';
+const connectionString = 'postgresql://postgres.wwltjlnlutnuypmkwbuy:WnVqgwTZEsSJc7Yv@aws-1-us-east-1.pooler.supabase.com:6543/postgres';
 
 async function deploy() {
   console.log("🚀 [DB DEPLOY] Iniciando atualização do banco de dados...");
   
   const client = new Client({
     connectionString,
-    ssl: { rejectUnauthorized: false }
+    ssl: { rejectUnauthorized: false },
+    connectionTimeoutMillis: 20000 // 20 segundos
   });
 
   try {

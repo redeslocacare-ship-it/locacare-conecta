@@ -71,6 +71,21 @@ async function deploy() {
         IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Permitir leitura publica de planos') THEN
             CREATE POLICY "Permitir leitura publica de planos" ON public.planos_locacao FOR SELECT USING (true);
         END IF;
+
+        -- Permitir que parceiros vejam locações vinculadas ao seu código de indicação
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Parceiro ve suas indicacoes') THEN
+            CREATE POLICY "Parceiro ve suas indicacoes" ON public.locacoes FOR SELECT 
+            USING (
+                codigo_indicacao_usado IN (
+                    SELECT codigo_indicacao FROM public.usuarios WHERE user_id = auth.uid()
+                )
+            );
+        END IF;
+
+        -- Permitir que usuários vejam seu próprio perfil (para pegar o código)
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Usuario ve proprio perfil') THEN
+            CREATE POLICY "Usuario ve proprio perfil" ON public.usuarios FOR SELECT USING (auth.uid() = user_id);
+        END IF;
       END $$;
     `);
 

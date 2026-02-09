@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Trash, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -91,6 +92,45 @@ export default function ConteudosPage() {
     },
   });
 
+  const [passos, setPassos] = useState<{ titulo: string; descricao: string }[]>([]);
+
+  // Update form and local state when data loads
+  React.useEffect(() => {
+    if (comoFunciona?.conteudo?.passos) {
+      setPassos(comoFunciona.conteudo.passos);
+      formComo.setValue("passos_json", JSON.stringify(comoFunciona.conteudo, null, 2));
+      formComo.setValue("publicado", comoFunciona.publicado);
+    } else {
+        // Default value if not found
+        setPassos([
+            { titulo: "Você solicita o orçamento", descricao: "Pelo site ou WhatsApp, com datas e endereço." },
+            { titulo: "Confirmamos seus dados", descricao: "Validamos disponibilidade e alinhamos o plano." },
+            { titulo: "Entrega e instalação", descricao: "Instalamos a poltrona na sua casa com orientação." },
+            { titulo: "Suporte durante o uso", descricao: "Acompanhamento e suporte durante o período." },
+            { titulo: "Coleta na data combinada", descricao: "Retirada com agendamento e conferência." },
+        ]);
+    }
+  }, [comoFunciona, formComo]);
+
+  const addPasso = () => {
+      const newPassos = [...passos, { titulo: "Novo Passo", descricao: "Descrição do passo." }];
+      setPassos(newPassos);
+      formComo.setValue("passos_json", JSON.stringify({ passos: newPassos }, null, 2));
+  };
+
+  const removePasso = (index: number) => {
+      const newPassos = passos.filter((_, i) => i !== index);
+      setPassos(newPassos);
+      formComo.setValue("passos_json", JSON.stringify({ passos: newPassos }, null, 2));
+  };
+
+  const updatePasso = (index: number, field: "titulo" | "descricao", value: string) => {
+      const newPassos = [...passos];
+      newPassos[index] = { ...newPassos[index], [field]: value };
+      setPassos(newPassos);
+      formComo.setValue("passos_json", JSON.stringify({ passos: newPassos }, null, 2));
+  };
+  
   const formDepo = useForm<Depo>({
     resolver: zodResolver(depoSchema),
     defaultValues: { nome_cliente: "", cidade: "", texto_depoimento: "", ordem_exibicao: 0, publicado: true },

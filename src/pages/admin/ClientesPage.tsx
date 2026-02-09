@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 /**
  * Módulo: Clientes
@@ -29,9 +30,14 @@ const schema = z.object({
 
 type Valores = z.infer<typeof schema>;
 
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Eye, FileText, Link as LinkIcon, Plus, Search } from "lucide-react";
+
 export default function ClientesPage() {
   const [busca, setBusca] = useState("");
   const [aberto, setAberto] = useState(false);
+  const [clienteExpandido, setClienteExpandido] = useState<string | null>(null);
   const qc = useQueryClient();
 
   const { data: clientes = [] } = useQuery({
@@ -40,7 +46,6 @@ export default function ClientesPage() {
       let q = supabase.from("clientes").select("id,nome_completo,telefone_whatsapp,email,cidade,bairro,criado_em").order("criado_em", { ascending: false });
 
       if (busca.trim()) {
-        // ilike para nome/telefone/cidade
         const term = `%${busca.trim()}%`;
         q = q.or(`nome_completo.ilike.${term},telefone_whatsapp.ilike.${term},cidade.ilike.${term}`);
       }
@@ -49,6 +54,22 @@ export default function ClientesPage() {
       if (error) throw error;
       return data;
     },
+  });
+
+  const { data: historicoLocacoes = [] } = useQuery({
+      queryKey: ["admin", "historico_locacoes", clienteExpandido],
+      queryFn: async () => {
+          if (!clienteExpandido) return [];
+          const { data, error } = await supabase
+              .from("locacoes")
+              .select("id, status_locacao, criado_em, data_inicio_prevista, data_fim_prevista, planos_locacao(nome_plano)")
+              .eq("cliente_id", clienteExpandido)
+              .order("criado_em", { ascending: false });
+          
+          if (error) throw error;
+          return data;
+      },
+      enabled: !!clienteExpandido
   });
 
   const form = useForm<Valores>({
@@ -200,6 +221,53 @@ export default function ClientesPage() {
                 <p className="text-xs text-muted-foreground">
                   {c.cidade} {c.bairro ? `• ${c.bairro}` : ""}
                 </p>
+              </div>
+            ))}
+            {clientes.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum cliente encontrado.</p> : null}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+                </div>
+                
+                {clienteExpandido === c.id && (
+                    <div className="bg-muted/20 p-4 border-t space-y-4">
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div>
+                                <h4 className="text-sm font-semibold mb-2">Histórico de Locações</h4>
+                                {historicoLocacoes.length > 0 ? (
+                                    <div className="space-y-2">
+                                        {historicoLocacoes.map((h: any) => (
+                                            <div key={h.id} className="text-sm bg-background p-2 rounded border">
+                                                <div className="flex justify-between">
+                                                    <span className="font-medium">{h.planos_locacao?.nome_plano || "Plano Personalizado"}</span>
+                                                    <Badge variant="secondary">{h.status_locacao}</Badge>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground mt-1">
+                                                    {new Date(h.data_inicio_prevista).toLocaleDateString()} até {new Date(h.data_fim_prevista).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-muted-foreground">Nenhuma locação registrada.</p>
+                                )}
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-semibold mb-2">Observações (Interno)</h4>
+                                <Textarea 
+                                    placeholder="Adicione notas sobre o cliente..." 
+                                    className="resize-none" 
+                                    rows={4}
+                                    defaultValue="Cliente preferencial. Gosta de contato via WhatsApp."
+                                />
+                                <Button size="sm" variant="outline" className="mt-2 w-full">Salvar Observação</Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
               </div>
             ))}
             {clientes.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum cliente encontrado.</p> : null}

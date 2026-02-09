@@ -29,15 +29,23 @@ type Valores = z.infer<typeof schema>;
 
 export default function PoltronasPage() {
   const [aberto, setAberto] = useState(false);
+  const [busca, setBusca] = useState("");
   const qc = useQueryClient();
 
   const { data: poltronas = [] } = useQuery({
-    queryKey: ["admin", "poltronas"],
+    queryKey: ["admin", "poltronas", busca],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("poltronas")
         .select("id,nome,descricao,cor,material,codigo_interno,status,criado_em")
         .order("criado_em", { ascending: false });
+
+      if (busca.trim()) {
+        const term = `%${busca.trim()}%`;
+        q = q.or(`nome.ilike.${term},codigo_interno.ilike.${term},status.ilike.${term}`);
+      }
+
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },
@@ -78,16 +86,23 @@ export default function PoltronasPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-end justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-3xl">Poltronas</h1>
           <p className="mt-2 text-sm text-muted-foreground">Cadastre modelos para locação (preparado para expansão).</p>
         </div>
 
-        <Dialog open={aberto} onOpenChange={setAberto}>
-          <DialogTrigger asChild>
-            <Button>Nova poltrona</Button>
-          </DialogTrigger>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <Input 
+             placeholder="Buscar por nome, código ou status..." 
+             value={busca} 
+             onChange={(e) => setBusca(e.target.value)}
+             className="w-full sm:w-[250px]"
+          />
+          <Dialog open={aberto} onOpenChange={setAberto}>
+            <DialogTrigger asChild>
+              <Button>Nova poltrona</Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Nova poltrona</DialogTitle>

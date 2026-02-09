@@ -27,8 +27,12 @@ const schema = z.object({
 
 type Valores = z.infer<typeof schema>;
 
+import { Trash, Pencil, Plus } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+
 export default function PlanosPage() {
   const [aberto, setAberto] = useState(false);
+  const [planoEditando, setPlanoEditando] = useState<any>(null);
   const qc = useQueryClient();
 
   const { data: planos = [] } = useQuery({
@@ -48,24 +52,61 @@ export default function PlanosPage() {
     defaultValues: { nome_plano: "", dias_duracao: 30, preco_base: 0, ativo: true },
   });
 
-  const criar = useMutation({
-    mutationFn: async (values: Valores) => {
-      const { error } = await supabase.from("planos_locacao").insert({
-        nome_plano: values.nome_plano,
-        dias_duracao: values.dias_duracao,
-        preco_base: values.preco_base,
-        ativo: values.ativo,
+  // Reset form when editing changes
+  React.useEffect(() => {
+    if (planoEditando) {
+      form.reset({
+        nome_plano: planoEditando.nome_plano,
+        dias_duracao: planoEditando.dias_duracao,
+        preco_base: planoEditando.preco_base,
+        ativo: planoEditando.ativo,
       });
-      if (error) throw error;
+    } else {
+      form.reset({ nome_plano: "", dias_duracao: 30, preco_base: 0, ativo: true });
+    }
+  }, [planoEditando, form]);
+
+  const salvar = useMutation({
+    mutationFn: async (values: Valores) => {
+      if (planoEditando) {
+         const { error } = await supabase.from("planos_locacao").update({
+            nome_plano: values.nome_plano,
+            dias_duracao: values.dias_duracao,
+            preco_base: values.preco_base,
+            ativo: values.ativo,
+         }).eq("id", planoEditando.id);
+         if (error) throw error;
+      } else {
+        const { error } = await supabase.from("planos_locacao").insert({
+            nome_plano: values.nome_plano,
+            dias_duracao: values.dias_duracao,
+            preco_base: values.preco_base,
+            ativo: values.ativo,
+        });
+        if (error) throw error;
+      }
     },
     onSuccess: async () => {
-      toast.success("Plano cadastrado.");
+      toast.success(planoEditando ? "Plano atualizado." : "Plano cadastrado.");
       setAberto(false);
+      setPlanoEditando(null);
       form.reset();
       await qc.invalidateQueries({ queryKey: ["admin", "planos"] });
       await qc.invalidateQueries({ queryKey: ["public", "planos_locacao"] });
     },
-    onError: () => toast.error("Não foi possível cadastrar o plano."),
+    onError: () => toast.error("Não foi possível salvar o plano."),
+  });
+
+  const excluir = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("planos_locacao").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      toast.success("Plano excluído.");
+      await qc.invalidateQueries({ queryKey: ["admin", "planos"] });
+    },
+    onError: () => toast.error("Erro ao excluir (pode estar em uso)."),
   });
 
   return (
@@ -76,17 +117,20 @@ export default function PlanosPage() {
           <p className="mt-2 text-sm text-muted-foreground">Planos exibidos no site público quando estiverem ativos.</p>
         </div>
 
-        <Dialog open={aberto} onOpenChange={setAberto}>
+        <Dialog open={aberto} onOpenChange={(open) => {
+            setAberto(open);
+            if (!open) setPlanoEditando(null);
+        }}>
           <DialogTrigger asChild>
-            <Button>Novo plano</Button>
+            <Button><Plus className="mr-2 h-4 w-4" /> Novo plano</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Novo plano</DialogTitle>
+              <DialogTitle>{planoEditando ? "Editar plano" : "Novo plano"}</DialogTitle>
             </DialogHeader>
 
             <Form {...form}>
-              <form onSubmit={form.handleSubmit((v) => criar.mutate(v))} className="grid gap-4 md:grid-cols-2">
+              <form onSubmit={form.handleSubmit((v) => salvar.mutate(v))} className="grid gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="nome_plano"
@@ -147,8 +191,8 @@ export default function PlanosPage() {
                 />
 
                 <div className="md:col-span-2 flex justify-end">
-                  <Button type="submit" disabled={criar.isPending}>
-                    {criar.isPending ? "Salvando…" : "Salvar"}
+                  <Button type="submit" disabled={salvar.isPending}>
+                    {salvar.isPending ? "Salvando…" : "Salvar"}
                   </Button>
                 </div>
               </form>
@@ -170,11 +214,48 @@ export default function PlanosPage() {
                     <p className="font-medium">{p.nome_plano}</p>
                     <p className="text-xs text-muted-foreground">{p.dias_duracao} dias</p>
                   </div>
-                  <div className="text-right">
-                    <p className="font-semibold">
-                      {Number(p.preco_base).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{p.ativo ? "Ativo" : "Inativo"}</p>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right hidden sm:block">
+                        <p className="font-semibold">
+                        {Number(p.preco_base).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{p.ativo ? "Ativo" : "Inativo"}</p>
+                    </div>
+                    
+                    <div className="flex items-center gap-1">
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => {
+                                setPlanoEditando(p);
+                                setAberto(true);
+                            }}
+                        >
+                            <Pencil className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90">
+                                    <Trash className="h-4 w-4" />
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Excluir plano?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Essa ação não pode ser desfeita. Isso excluirá permanentemente o plano <b>{p.nome_plano}</b>.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => excluir.mutate(p.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                        Excluir
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </div>
                   </div>
                 </div>
               </div>

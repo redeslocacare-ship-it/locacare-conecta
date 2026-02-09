@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Eye, FileText, Link as LinkIcon, Plus, Search } from "lucide-react";
+import { Eye, FileText, Link as LinkIcon, Plus, Search, CheckCircle, Clock, Truck, Activity, XCircle, DollarSign, Calendar } from "lucide-react";
 
 /**
  * Módulo: Locações
@@ -38,6 +38,20 @@ const statusLocacao = [
   "finalizada",
   "cancelada",
 ] as const;
+
+const statusConfig: Record<string, { color: string; icon: any; label: string }> = {
+  lead: { color: "bg-orange-100 text-orange-700 hover:bg-orange-200", icon: Activity, label: "Lead (Novo)" },
+  orcamento_enviado: { color: "bg-blue-100 text-blue-700 hover:bg-blue-200", icon: FileText, label: "Orçamento Enviado" },
+  aguardando_pagamento: { color: "bg-yellow-100 text-yellow-700 hover:bg-yellow-200", icon: DollarSign, label: "Aguardando Pagto" },
+  confirmada: { color: "bg-green-100 text-green-700 hover:bg-green-200", icon: CheckCircle, label: "Confirmada" },
+  em_entrega: { color: "bg-indigo-100 text-indigo-700 hover:bg-indigo-200", icon: Truck, label: "Em Entrega" },
+  em_uso: { color: "bg-purple-100 text-purple-700 hover:bg-purple-200", icon: Armchair, label: "Em Uso" },
+  em_coleta: { color: "bg-pink-100 text-pink-700 hover:bg-pink-200", icon: Truck, label: "Em Coleta" },
+  finalizada: { color: "bg-gray-100 text-gray-700 hover:bg-gray-200", icon: CheckCircle, label: "Finalizada" },
+  cancelada: { color: "bg-red-100 text-red-700 hover:bg-red-200", icon: XCircle, label: "Cancelada" },
+};
+// Fallback icon for missing imports (Armchair might be missing if I didn't import it)
+import { Armchair } from "lucide-react";
 
 const schema = z.object({
   cliente_id: z.string().uuid("Selecione um cliente"),
@@ -519,15 +533,24 @@ export default function LocacoesPage() {
                               }
                           }}
                         >
-                          <SelectTrigger className="h-8 w-[140px] text-xs">
-                            <SelectValue />
+                          <SelectTrigger className={`h-8 w-auto min-w-[140px] border-0 ring-1 ring-inset ring-gray-200 ${statusConfig[l.status_locacao]?.color || "bg-gray-100"}`}>
+                             <div className="flex items-center gap-2">
+                                {statusConfig[l.status_locacao]?.icon && React.createElement(statusConfig[l.status_locacao].icon, { className: "h-3.5 w-3.5" })}
+                                <span className="text-xs font-medium truncate">{statusConfig[l.status_locacao]?.label || l.status_locacao}</span>
+                             </div>
                           </SelectTrigger>
                           <SelectContent>
-                            {statusLocacao.map((s) => (
-                              <SelectItem key={s} value={s}>
-                                {s}
-                              </SelectItem>
-                            ))}
+                            {statusLocacao.map((s) => {
+                              const config = statusConfig[s] || { label: s, color: "", icon: null };
+                              return (
+                                <SelectItem key={s} value={s}>
+                                  <div className="flex items-center gap-2">
+                                    {config.icon && React.createElement(config.icon, { className: "h-3.5 w-3.5 text-muted-foreground" })}
+                                    <span>{config.label}</span>
+                                  </div>
+                                </SelectItem>
+                              );
+                            })}
                           </SelectContent>
                         </Select>
                     </div>

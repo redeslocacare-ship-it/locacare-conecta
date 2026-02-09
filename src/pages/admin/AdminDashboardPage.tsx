@@ -2,6 +2,7 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Activity, Users, Armchair, CheckCircle, Clock, Truck } from "lucide-react";
 
 /**
  * Dashboard (Visão geral)
@@ -9,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
  * MVP: indicadores simples via contagens.
  */
 export default function AdminDashboardPage() {
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["admin", "indicadores"],
     queryFn: async () => {
       const [ativas, lead, confirmada, emUso, poltronasDisponiveis, poltronasEmLocacao] = await Promise.all([
@@ -37,40 +38,60 @@ export default function AdminDashboardPage() {
         ultimos: ultimos.data ?? [],
       };
     },
+    refetchInterval: 30000, // Atualiza a cada 30s
   });
 
   const indicadores = [
-    { titulo: "Locações ativas", valor: data?.ativas ?? 0 },
-    { titulo: "Leads", valor: data?.lead ?? 0 },
-    { titulo: "Confirmadas", valor: data?.confirmada ?? 0 },
-    { titulo: "Em uso", valor: data?.emUso ?? 0 },
-    { titulo: "Poltronas disponíveis", valor: data?.poltronasDisponiveis ?? 0 },
-    { titulo: "Poltronas em locação", valor: data?.poltronasEmLocacao ?? 0 },
+    { titulo: "Locações ativas", valor: data?.ativas ?? 0, icon: Activity, color: "text-blue-500", animate: true },
+    { titulo: "Leads (Novos)", valor: data?.lead ?? 0, icon: Users, color: "text-orange-500", animate: false },
+    { titulo: "Confirmadas", valor: data?.confirmada ?? 0, icon: CheckCircle, color: "text-green-500", animate: false },
+    { titulo: "Em uso", valor: data?.emUso ?? 0, icon: Armchair, color: "text-purple-500", animate: false },
+    { titulo: "Poltronas livres", valor: data?.poltronasDisponiveis ?? 0, icon: Armchair, color: "text-emerald-500", animate: false },
+    { titulo: "Em locação", valor: data?.poltronasEmLocacao ?? 0, icon: Truck, color: "text-indigo-500", animate: false },
   ];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl">Visão geral</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Indicadores do negócio e últimos registros.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Visão geral</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Acompanhe o desempenho em tempo real.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+           <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+            </span>
+            <span className="text-sm font-medium text-muted-foreground">Ao vivo</span>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        {indicadores.map((i) => (
-          <Card key={i.titulo} className="shadow-soft">
-            <CardHeader>
-              <CardTitle className="text-base font-semibold" style={{ fontFamily: "var(--font-sans)" }}>
-                {i.titulo}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-semibold">{i.valor}</p>
-            </CardContent>
-          </Card>
-        ))}
+        {indicadores.map((i) => {
+          const Icon = i.icon;
+          return (
+            <Card key={i.titulo} className="shadow-sm hover:shadow-md transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  {i.titulo}
+                </CardTitle>
+                <Icon className={`h-4 w-4 ${i.color} ${i.animate ? "animate-pulse" : ""}`} />
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                   <div className="h-8 w-16 bg-muted animate-pulse rounded" />
+                ) : (
+                   <div className="text-2xl font-bold">{i.valor}</div>
+                )}
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
 
-      <Card className="shadow-soft">
+      <Card className="shadow-sm">
         <CardHeader>
           <CardTitle className="text-xl">Últimos leads/locações</CardTitle>
         </CardHeader>

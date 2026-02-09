@@ -31,6 +31,7 @@ const itens: ItemSidebar[] = [
   { titulo: "Locações", url: "/admin/locacoes", icon: ClipboardList, end: false },
   { titulo: "Parceiros", url: "/admin/usuarios", icon: Users, end: false },
   { titulo: "Conteúdos", url: "/admin/conteudos", icon: FileText, end: false },
+  { titulo: "Contratos", url: "/admin/contratos", icon: FileText, end: false },
 ];
 
 export function AdminHeader() {

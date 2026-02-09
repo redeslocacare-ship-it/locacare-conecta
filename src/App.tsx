@@ -19,6 +19,7 @@ import PlanosPage from "@/pages/admin/PlanosPage";
 import LocacoesPage from "@/pages/admin/LocacoesPage";
 import ConteudosPage from "@/pages/admin/ConteudosPage";
 import UsuariosPage from "@/pages/admin/UsuariosPage";
+import ContratosPage from "@/pages/admin/ContratosPage";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +66,7 @@ const App = () => (
               <Route path="locacoes" element={<LocacoesPage />} />
               <Route path="conteudos" element={<ConteudosPage />} />
               <Route path="usuarios" element={<UsuariosPage />} />
+              <Route path="contratos" element={<ContratosPage />} />
             </Route>
 
             {/* atalho */}

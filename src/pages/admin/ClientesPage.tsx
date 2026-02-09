@@ -210,28 +210,27 @@ export default function ClientesPage() {
         <CardContent>
           <div className="space-y-2">
             {clientes.map((c: any) => (
-              <div key={c.id} className="rounded-lg border bg-background p-3">
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="font-medium">{c.nome_completo}</p>
-                  <p className="text-xs text-muted-foreground">{new Date(c.criado_em).toLocaleString("pt-BR")}</p>
+              <div key={c.id} className="rounded-lg border bg-background overflow-hidden">
+                <div 
+                    className="p-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => setClienteExpandido(clienteExpandido === c.id ? null : c.id)}
+                >
+                    <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                            <p className="font-medium">{c.nome_completo}</p>
+                            {clienteExpandido === c.id ? <Badge variant="outline">Detalhes</Badge> : null}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                            {c.telefone_whatsapp} {c.email ? `• ${c.email}` : ""}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                            {c.cidade} {c.bairro ? `• ${c.bairro}` : ""}
+                        </p>
+                    </div>
+                    <div className="text-xs text-muted-foreground whitespace-nowrap">
+                        {new Date(c.criado_em).toLocaleDateString("pt-BR")}
+                    </div>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  {c.telefone_whatsapp} {c.email ? `• ${c.email}` : ""}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {c.cidade} {c.bairro ? `• ${c.bairro}` : ""}
-                </p>
-              </div>
-            ))}
-            {clientes.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum cliente encontrado.</p> : null}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-                </div>
-                
                 {clienteExpandido === c.id && (
                     <div className="bg-muted/20 p-4 border-t space-y-4">
                         <div className="grid gap-4 md:grid-cols-2">

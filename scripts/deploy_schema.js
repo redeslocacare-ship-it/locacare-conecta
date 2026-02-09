@@ -105,6 +105,83 @@ async function deploy() {
       EXECUTE FUNCTION public.atualizar_saldo_parceiro();
     `);
 
+    // Migração: RPC para criar parceiro
+    await client.query(`CREATE EXTENSION IF NOT EXISTS pgcrypto;`);
+    
+    await client.query(`
+      CREATE OR REPLACE FUNCTION public.admin_create_partner(
+        email text,
+        password text,
+        name text,
+        codigo text,
+        percentual numeric
+      )
+      RETURNS uuid
+      LANGUAGE plpgsql
+      SECURITY DEFINER -- Runs as postgres (admin)
+      AS $$
+      DECLARE
+        new_user_id uuid;
+      BEGIN
+        -- 1. Insert into auth.users
+        INSERT INTO auth.users (
+            instance_id,
+            id,
+            aud,
+            role,
+            email,
+            encrypted_password,
+            email_confirmed_at,
+            raw_app_meta_data,
+            raw_user_meta_data,
+            created_at,
+            updated_at
+        ) VALUES (
+            '00000000-0000-0000-0000-000000000000',
+            gen_random_uuid(),
+            'authenticated',
+            'authenticated',
+            email,
+            crypt(password, gen_salt('bf')),
+            now(),
+            '{"provider": "email", "providers": ["email"]}',
+            jsonb_build_object('nome', name),
+            now(),
+            now()
+        ) RETURNING id INTO new_user_id;
+
+        -- 2. Insert into public.identity (usually handled by Supabase triggers, but let's ensure it works)
+        -- Actually, Supabase usually has a trigger on auth.users that inserts into public.users if configured.
+        -- Our 'public.usuarios' table might be populated by a trigger.
+        -- Let's check if we need to update it or insert it.
+        
+        -- We will upsert into public.usuarios to set the extra fields
+        INSERT INTO public.usuarios (user_id, email, nome, codigo_indicacao, comissao_percentual)
+        VALUES (new_user_id, email, name, codigo, percentual)
+        ON CONFLICT (user_id) DO UPDATE
+        SET codigo_indicacao = EXCLUDED.codigo_indicacao,
+            comissao_percentual = EXCLUDED.comissao_percentual,
+            nome = EXCLUDED.nome;
+            
+        RETURN new_user_id;
+      END;
+      $$;
+    `);
+
+    // Migração: RPC para deletar parceiro
+    await client.query(`
+      CREATE OR REPLACE FUNCTION public.admin_delete_user(target_user_id uuid)
+      RETURNS void
+      LANGUAGE plpgsql
+      SECURITY DEFINER
+      AS $$
+      BEGIN
+        DELETE FROM public.usuarios WHERE user_id = target_user_id;
+        DELETE FROM auth.users WHERE id = target_user_id;
+      END;
+      $$;
+    `);
+
     // Migração: Políticas RLS para leitura pública de planos (se necessário reforçar)
     await client.query(`
       DO $$ 

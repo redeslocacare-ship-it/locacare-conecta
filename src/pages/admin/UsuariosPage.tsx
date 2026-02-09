@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Trash } from "lucide-react";
+import { Search, Trash } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -99,10 +99,42 @@ export default function UsuariosPage() {
     onError: () => toast.error("Erro ao atualizar. Verifique os dados."),
   });
 
+  const [novoParceiroAberto, setNovoParceiroAberto] = useState(false);
+  const [novoParceiroDados, setNovoParceiroDados] = useState({ nome: "", email: "", senha: "", codigo: "", percentual: "10" });
+  
+  const criarParceiro = useMutation({
+      mutationFn: async (dados: typeof novoParceiroDados) => {
+          const { data, error } = await supabase.rpc("admin_create_partner", {
+              email: dados.email,
+              password: dados.senha,
+              name: dados.nome,
+              codigo: dados.codigo.toUpperCase().trim() || null,
+              percentual: Number(dados.percentual)
+          });
+          if (error) throw error;
+          return data;
+      },
+      onSuccess: () => {
+          toast.success("Parceiro criado com sucesso!");
+          setNovoParceiroAberto(false);
+          setNovoParceiroDados({ nome: "", email: "", senha: "", codigo: "", percentual: "10" });
+          qc.invalidateQueries({ queryKey: ["admin", "usuarios"] });
+      },
+      onError: (e: any) => {
+          console.error(e);
+          toast.error(e.message || "Erro ao criar parceiro. Verifique se o email já existe.");
+      }
+  });
+
   const excluirUsuario = useMutation({
     mutationFn: async (id: string) => {
-        const { error } = await supabase.from("usuarios").delete().eq("id", id);
-        if (error) throw error;
+        // Usa RPC para deletar de auth.users e public.usuarios
+        const { error } = await supabase.rpc("admin_delete_user", { target_user_id: id });
+        if (error) {
+            // Fallback se RPC falhar (ex: não atualizado)
+            const { error: delError } = await supabase.from("usuarios").delete().eq("id", id);
+            if (delError) throw delError;
+        }
     },
     onSuccess: () => {
         toast.success("Usuário excluído com sucesso.");
@@ -134,7 +166,7 @@ export default function UsuariosPage() {
               />
             </div>
             
-            <Dialog>
+            <Dialog open={novoParceiroAberto} onOpenChange={setNovoParceiroAberto}>
                 <DialogTrigger asChild>
                     <Button>Novo Parceiro</Button>
                 </DialogTrigger>
@@ -142,17 +174,58 @@ export default function UsuariosPage() {
                     <DialogHeader>
                         <DialogTitle>Novo Parceiro</DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-4 text-sm">
-                        <p>Para adicionar um novo parceiro, siga estes passos:</p>
-                        <ol className="list-decimal pl-4 space-y-2">
-                            <li>Peça para o parceiro se cadastrar no site (Login/Cadastro).</li>
-                            <li>Após o cadastro, ele aparecerá nesta lista.</li>
-                            <li>Clique em <b>Gerenciar</b> ao lado do nome dele.</li>
-                            <li>Defina um <b>Código de Indicação</b> e a <b>% de Comissão</b>.</li>
-                        </ol>
-                        <div className="bg-muted p-3 rounded text-xs text-muted-foreground">
-                            Nota: O sistema de autenticação requer que o próprio usuário crie sua senha por questões de segurança.
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>Nome Completo</Label>
+                            <Input 
+                                value={novoParceiroDados.nome}
+                                onChange={(e) => setNovoParceiroDados({ ...novoParceiroDados, nome: e.target.value })}
+                                placeholder="Ex: João da Silva"
+                            />
                         </div>
+                        <div className="space-y-2">
+                            <Label>E-mail (Login)</Label>
+                            <Input 
+                                value={novoParceiroDados.email}
+                                onChange={(e) => setNovoParceiroDados({ ...novoParceiroDados, email: e.target.value })}
+                                placeholder="joao@email.com"
+                                type="email"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Senha Provisória</Label>
+                            <Input 
+                                value={novoParceiroDados.senha}
+                                onChange={(e) => setNovoParceiroDados({ ...novoParceiroDados, senha: e.target.value })}
+                                placeholder="******"
+                                type="password"
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>Código de Indicação</Label>
+                                <Input 
+                                    value={novoParceiroDados.codigo}
+                                    onChange={(e) => setNovoParceiroDados({ ...novoParceiroDados, codigo: e.target.value })}
+                                    placeholder="JOAO10"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Comissão (%)</Label>
+                                <Input 
+                                    value={novoParceiroDados.percentual}
+                                    onChange={(e) => setNovoParceiroDados({ ...novoParceiroDados, percentual: e.target.value })}
+                                    type="number"
+                                />
+                            </div>
+                        </div>
+                        <Button 
+                            className="w-full" 
+                            onClick={() => criarParceiro.mutate(novoParceiroDados)}
+                            disabled={criarParceiro.isPending || !novoParceiroDados.email || !novoParceiroDados.senha}
+                        >
+                            {criarParceiro.isPending ? "Criando..." : "Criar Parceiro"}
+                        </Button>
                     </div>
                 </DialogContent>
             </Dialog>

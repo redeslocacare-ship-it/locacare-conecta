@@ -212,7 +212,8 @@ export default function PoltronasPage() {
               </form>
             </Form>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
 
       <Card className="shadow-soft">

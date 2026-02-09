@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Trash, Plus } from "lucide-react";
+import { Trash, Plus, Pencil } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -131,6 +131,9 @@ export default function ConteudosPage() {
       formComo.setValue("passos_json", JSON.stringify({ passos: newPassos }, null, 2));
   };
   
+  const [depoEditando, setDepoEditando] = useState<any>(null);
+  const [faqEditando, setFaqEditando] = useState<any>(null);
+  
   const formDepo = useForm<Depo>({
     resolver: zodResolver(depoSchema),
     defaultValues: { nome_cliente: "", cidade: "", texto_depoimento: "", ordem_exibicao: 0, publicado: true },
@@ -140,6 +143,23 @@ export default function ConteudosPage() {
     resolver: zodResolver(faqSchema),
     defaultValues: { pergunta: "", resposta: "", ordem_exibicao: 0, publicado: true },
   });
+  
+  // Reset forms on edit
+  React.useEffect(() => {
+    if (depoEditando) {
+        formDepo.reset(depoEditando);
+    } else {
+        formDepo.reset({ nome_cliente: "", cidade: "", texto_depoimento: "", ordem_exibicao: 0, publicado: true });
+    }
+  }, [depoEditando, formDepo]);
+
+  React.useEffect(() => {
+    if (faqEditando) {
+        formFaq.reset(faqEditando);
+    } else {
+        formFaq.reset({ pergunta: "", resposta: "", ordem_exibicao: 0, publicado: true });
+    }
+  }, [faqEditando, formFaq]);
 
   const formComo = useForm<Como>({
     resolver: zodResolver(comoSchema),
@@ -167,20 +187,32 @@ export default function ConteudosPage() {
       : undefined,
   });
 
-  const criarDepo = useMutation({
+  const salvarDepo = useMutation({
     mutationFn: async (values: Depo) => {
-      const { error } = await supabase.from("depoimentos").insert({
-        nome_cliente: values.nome_cliente,
-        cidade: values.cidade?.trim() ? values.cidade.trim() : null,
-        texto_depoimento: values.texto_depoimento,
-        ordem_exibicao: values.ordem_exibicao,
-        publicado: values.publicado,
-      });
-      if (error) throw error;
+      if (depoEditando) {
+          const { error } = await supabase.from("depoimentos").update({
+            nome_cliente: values.nome_cliente,
+            cidade: values.cidade?.trim() ? values.cidade.trim() : null,
+            texto_depoimento: values.texto_depoimento,
+            ordem_exibicao: values.ordem_exibicao,
+            publicado: values.publicado,
+          }).eq("id", depoEditando.id);
+          if (error) throw error;
+      } else {
+          const { error } = await supabase.from("depoimentos").insert({
+            nome_cliente: values.nome_cliente,
+            cidade: values.cidade?.trim() ? values.cidade.trim() : null,
+            texto_depoimento: values.texto_depoimento,
+            ordem_exibicao: values.ordem_exibicao,
+            publicado: values.publicado,
+          });
+          if (error) throw error;
+      }
     },
     onSuccess: async () => {
-      toast.success("Depoimento salvo.");
+      toast.success(depoEditando ? "Depoimento atualizado." : "Depoimento salvo.");
       setAbertoDepo(false);
+      setDepoEditando(null);
       formDepo.reset();
       await qc.invalidateQueries({ queryKey: ["admin", "depoimentos"] });
       await qc.invalidateQueries({ queryKey: ["public", "depoimentos"] });
@@ -188,24 +220,57 @@ export default function ConteudosPage() {
     onError: () => toast.error("Não foi possível salvar."),
   });
 
-  const criarFaq = useMutation({
+  const excluirDepo = useMutation({
+      mutationFn: async (id: string) => {
+          const { error } = await supabase.from("depoimentos").delete().eq("id", id);
+          if (error) throw error;
+      },
+      onSuccess: async () => {
+          toast.success("Depoimento excluído.");
+          await qc.invalidateQueries({ queryKey: ["admin", "depoimentos"] });
+      }
+  });
+
+  const salvarFaq = useMutation({
     mutationFn: async (values: Faq) => {
-      const { error } = await supabase.from("faqs").insert({
-        pergunta: values.pergunta,
-        resposta: values.resposta,
-        ordem_exibicao: values.ordem_exibicao,
-        publicado: values.publicado,
-      });
-      if (error) throw error;
+      if (faqEditando) {
+          const { error } = await supabase.from("faqs").update({
+            pergunta: values.pergunta,
+            resposta: values.resposta,
+            ordem_exibicao: values.ordem_exibicao,
+            publicado: values.publicado,
+          }).eq("id", faqEditando.id);
+          if (error) throw error;
+      } else {
+          const { error } = await supabase.from("faqs").insert({
+            pergunta: values.pergunta,
+            resposta: values.resposta,
+            ordem_exibicao: values.ordem_exibicao,
+            publicado: values.publicado,
+          });
+          if (error) throw error;
+      }
     },
     onSuccess: async () => {
-      toast.success("FAQ salvo.");
+      toast.success(faqEditando ? "FAQ atualizado." : "FAQ salvo.");
       setAbertoFaq(false);
+      setFaqEditando(null);
       formFaq.reset();
       await qc.invalidateQueries({ queryKey: ["admin", "faqs"] });
       await qc.invalidateQueries({ queryKey: ["public", "faqs"] });
     },
     onError: () => toast.error("Não foi possível salvar."),
+  });
+  
+  const excluirFaq = useMutation({
+      mutationFn: async (id: string) => {
+          const { error } = await supabase.from("faqs").delete().eq("id", id);
+          if (error) throw error;
+      },
+      onSuccess: async () => {
+          toast.success("FAQ excluído.");
+          await qc.invalidateQueries({ queryKey: ["admin", "faqs"] });
+      }
   });
 
   const salvarComo = useMutation({
@@ -256,16 +321,19 @@ export default function ConteudosPage() {
         </TabsList>
 
         <TabsContent value="depoimentos" className="mt-4 space-y-4">
-          <Dialog open={abertoDepo} onOpenChange={setAbertoDepo}>
+          <Dialog open={abertoDepo} onOpenChange={(open) => {
+              setAbertoDepo(open);
+              if (!open) setDepoEditando(null);
+          }}>
             <DialogTrigger asChild>
               <Button>Novo depoimento</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Novo depoimento</DialogTitle>
+                <DialogTitle>{depoEditando ? "Editar depoimento" : "Novo depoimento"}</DialogTitle>
               </DialogHeader>
               <Form {...formDepo}>
-                <form onSubmit={formDepo.handleSubmit((v) => criarDepo.mutate(v))} className="grid gap-4 md:grid-cols-2">
+                <form onSubmit={formDepo.handleSubmit((v) => salvarDepo.mutate(v))} className="grid gap-4 md:grid-cols-2">
                   <FormField
                     control={formDepo.control}
                     name="nome_cliente"
@@ -335,8 +403,8 @@ export default function ConteudosPage() {
                     )}
                   />
                   <div className="md:col-span-2 flex justify-end">
-                    <Button type="submit" disabled={criarDepo.isPending}>
-                      {criarDepo.isPending ? "Salvando…" : "Salvar"}
+                    <Button type="submit" disabled={salvarDepo.isPending}>
+                      {salvarDepo.isPending ? "Salvando…" : "Salvar"}
                     </Button>
                   </div>
                 </form>
@@ -353,11 +421,26 @@ export default function ConteudosPage() {
                 {depoimentos.map((d: any) => (
                   <div key={d.id} className="rounded-lg border bg-background p-3">
                     <div className="flex items-center justify-between gap-4">
-                      <p className="font-medium">{d.nome_cliente}</p>
-                      <p className="text-xs text-muted-foreground">{d.publicado ? "Publicado" : "Rascunho"}</p>
+                        <div>
+                          <div className="flex items-center gap-2">
+                              <p className="font-medium">{d.nome_cliente}</p>
+                              <p className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{d.publicado ? "Publicado" : "Rascunho"}</p>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">Ordem: {d.ordem_exibicao}</p>
+                          <p className="mt-2 text-sm text-muted-foreground">“{d.texto_depoimento}”</p>
+                        </div>
+                        <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => {
+                                setDepoEditando(d);
+                                setAbertoDepo(true);
+                            }}>
+                                <Pencil className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => excluirDepo.mutate(d.id)}>
+                                <Trash className="h-4 w-4" />
+                            </Button>
+                        </div>
                     </div>
-                    <p className="text-xs text-muted-foreground">Ordem: {d.ordem_exibicao}</p>
-                    <p className="mt-2 text-sm text-muted-foreground">“{d.texto_depoimento}”</p>
                   </div>
                 ))}
                 {depoimentos.length === 0 ? <p className="text-sm text-muted-foreground">Sem depoimentos.</p> : null}
@@ -367,16 +450,19 @@ export default function ConteudosPage() {
         </TabsContent>
 
         <TabsContent value="faq" className="mt-4 space-y-4">
-          <Dialog open={abertoFaq} onOpenChange={setAbertoFaq}>
+          <Dialog open={abertoFaq} onOpenChange={(open) => {
+              setAbertoFaq(open);
+              if (!open) setFaqEditando(null);
+          }}>
             <DialogTrigger asChild>
               <Button>Nova pergunta</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Novo FAQ</DialogTitle>
+                <DialogTitle>{faqEditando ? "Editar FAQ" : "Novo FAQ"}</DialogTitle>
               </DialogHeader>
               <Form {...formFaq}>
-                <form onSubmit={formFaq.handleSubmit((v) => criarFaq.mutate(v))} className="grid gap-4">
+                <form onSubmit={formFaq.handleSubmit((v) => salvarFaq.mutate(v))} className="grid gap-4">
                   <FormField
                     control={formFaq.control}
                     name="pergunta"
@@ -437,8 +523,8 @@ export default function ConteudosPage() {
                   </div>
 
                   <div className="flex justify-end">
-                    <Button type="submit" disabled={criarFaq.isPending}>
-                      {criarFaq.isPending ? "Salvando…" : "Salvar"}
+                    <Button type="submit" disabled={salvarFaq.isPending}>
+                      {salvarFaq.isPending ? "Salvando…" : "Salvar"}
                     </Button>
                   </div>
                 </form>
@@ -455,11 +541,26 @@ export default function ConteudosPage() {
                 {faqs.map((f: any) => (
                   <div key={f.id} className="rounded-lg border bg-background p-3">
                     <div className="flex items-center justify-between gap-4">
-                      <p className="font-medium">{f.pergunta}</p>
-                      <p className="text-xs text-muted-foreground">{f.publicado ? "Publicado" : "Rascunho"}</p>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <p className="font-medium">{f.pergunta}</p>
+                                <p className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{f.publicado ? "Publicado" : "Rascunho"}</p>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">Ordem: {f.ordem_exibicao}</p>
+                            <p className="mt-2 text-sm text-muted-foreground">{f.resposta}</p>
+                        </div>
+                        <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => {
+                                setFaqEditando(f);
+                                setAbertoFaq(true);
+                            }}>
+                                <Pencil className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => excluirFaq.mutate(f.id)}>
+                                <Trash className="h-4 w-4" />
+                            </Button>
+                        </div>
                     </div>
-                    <p className="text-xs text-muted-foreground">Ordem: {f.ordem_exibicao}</p>
-                    <p className="mt-2 text-sm text-muted-foreground">{f.resposta}</p>
                   </div>
                 ))}
                 {faqs.length === 0 ? <p className="text-sm text-muted-foreground">Sem perguntas.</p> : null}

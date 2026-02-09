@@ -22,7 +22,18 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Search } from "lucide-react";
+import { Trash } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function UsuariosPage() {
   const [busca, setBusca] = useState("");
@@ -64,6 +75,23 @@ export default function UsuariosPage() {
       qc.invalidateQueries({ queryKey: ["admin", "usuarios"] });
     },
     onError: () => toast.error("Erro ao atualizar. O código pode já estar em uso."),
+  });
+
+  const excluirUsuario = useMutation({
+    mutationFn: async (id: string) => {
+        // Primeiro, remover dependências se necessário (opcional, dependendo do CASCADE)
+        // Aqui assumimos que o banco está configurado com ON DELETE CASCADE ou RESTRICT
+        const { error } = await supabase.from("usuarios").delete().eq("id", id);
+        if (error) throw error;
+    },
+    onSuccess: () => {
+        toast.success("Usuário excluído com sucesso.");
+        qc.invalidateQueries({ queryKey: ["admin", "usuarios"] });
+    },
+    onError: (error) => {
+        console.error(error);
+        toast.error("Erro ao excluir. O usuário pode ter locações vinculadas.");
+    }
   });
 
   return (
@@ -135,7 +163,7 @@ export default function UsuariosPage() {
                       })}
                     </span>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right flex items-center justify-end gap-2">
                     <Dialog
                       open={usuarioEditando?.id === user.id}
                       onOpenChange={(open) => {
@@ -149,7 +177,7 @@ export default function UsuariosPage() {
                     >
                       <DialogTrigger asChild>
                         <Button variant="outline" size="sm">
-                          Gerenciar Parceiro
+                          Gerenciar
                         </Button>
                       </DialogTrigger>
                       <DialogContent>
@@ -184,6 +212,28 @@ export default function UsuariosPage() {
                         </div>
                       </DialogContent>
                     </Dialog>
+
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90 hover:bg-destructive/10">
+                                <Trash className="h-4 w-4" />
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Excluir usuário?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Tem certeza que deseja excluir <b>{user.nome || user.email}</b>? Essa ação não pode ser desfeita.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => excluirUsuario.mutate(user.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                    Excluir
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                   </TableCell>
                 </TableRow>
               ))

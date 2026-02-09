@@ -22,6 +22,7 @@ import UsuariosPage from "@/pages/admin/UsuariosPage";
 
 const queryClient = new QueryClient();
 
+// Main App Component
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>

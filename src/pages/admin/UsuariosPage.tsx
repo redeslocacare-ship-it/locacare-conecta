@@ -39,6 +39,9 @@ export default function UsuariosPage() {
   const [busca, setBusca] = useState("");
   const [usuarioEditando, setUsuarioEditando] = useState<any>(null);
   const [novoCodigo, setNovoCodigo] = useState("");
+  const [novoPercentual, setNovoPercentual] = useState("10");
+  const [historicoAberto, setHistoricoAberto] = useState(false);
+  const [usuarioHistorico, setUsuarioHistorico] = useState<any>(null);
   const qc = useQueryClient();
 
   const { data: usuarios = [], isLoading } = useQuery({
@@ -46,7 +49,7 @@ export default function UsuariosPage() {
     queryFn: async () => {
       let q = supabase
         .from("usuarios")
-        .select("id, nome, email, codigo_indicacao, saldo_indicacoes, criado_em")
+        .select("id, nome, email, codigo_indicacao, saldo_indicacoes, comissao_percentual, criado_em")
         .order("criado_em", { ascending: false });
 
       if (busca.trim()) {
@@ -60,27 +63,44 @@ export default function UsuariosPage() {
     },
   });
 
+  const { data: historico = [] } = useQuery({
+      queryKey: ["admin", "historico_indicacoes", usuarioHistorico?.codigo_indicacao],
+      queryFn: async () => {
+          if (!usuarioHistorico?.codigo_indicacao) return [];
+          const { data, error } = await supabase
+            .from("locacoes")
+            .select("id, status_locacao, valor_total, criado_em, clientes(nome_completo)")
+            .eq("codigo_indicacao_usado", usuarioHistorico.codigo_indicacao)
+            .order("criado_em", { ascending: false });
+          
+          if (error) throw error;
+          return data;
+      },
+      enabled: !!usuarioHistorico?.codigo_indicacao && historicoAberto
+  });
+
   const atualizarCodigo = useMutation({
-    mutationFn: async ({ id, codigo }: { id: string; codigo: string }) => {
+    mutationFn: async ({ id, codigo, percentual }: { id: string; codigo: string, percentual: number }) => {
       const { error } = await supabase
         .from("usuarios")
-        .update({ codigo_indicacao: codigo.toUpperCase().trim() || null })
+        .update({ 
+            codigo_indicacao: codigo.toUpperCase().trim() || null,
+            comissao_percentual: percentual
+        })
         .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Código de indicação atualizado.");
+      toast.success("Dados do parceiro atualizados.");
       setUsuarioEditando(null);
       setNovoCodigo("");
       qc.invalidateQueries({ queryKey: ["admin", "usuarios"] });
     },
-    onError: () => toast.error("Erro ao atualizar. O código pode já estar em uso."),
+    onError: () => toast.error("Erro ao atualizar. Verifique os dados."),
   });
 
   const excluirUsuario = useMutation({
     mutationFn: async (id: string) => {
-        // Primeiro, remover dependências se necessário (opcional, dependendo do CASCADE)
-        // Aqui assumimos que o banco está configurado com ON DELETE CASCADE ou RESTRICT
         const { error } = await supabase.from("usuarios").delete().eq("id", id);
         if (error) throw error;
     },
@@ -100,17 +120,42 @@ export default function UsuariosPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Parceiros e Usuários</h1>
           <p className="text-muted-foreground">
-            Gerencie os códigos de indicação e visualize o saldo dos parceiros.
+            Gerencie comissões, códigos e histórico de indicações.
           </p>
         </div>
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nome, email ou código..."
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            className="pl-8"
-          />
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar parceiro..."
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+            
+            <Dialog>
+                <DialogTrigger asChild>
+                    <Button>Novo Parceiro</Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Novo Parceiro</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 text-sm">
+                        <p>Para adicionar um novo parceiro, siga estes passos:</p>
+                        <ol className="list-decimal pl-4 space-y-2">
+                            <li>Peça para o parceiro se cadastrar no site (Login/Cadastro).</li>
+                            <li>Após o cadastro, ele aparecerá nesta lista.</li>
+                            <li>Clique em <b>Gerenciar</b> ao lado do nome dele.</li>
+                            <li>Defina um <b>Código de Indicação</b> e a <b>% de Comissão</b>.</li>
+                        </ol>
+                        <div className="bg-muted p-3 rounded text-xs text-muted-foreground">
+                            Nota: O sistema de autenticação requer que o próprio usuário crie sua senha por questões de segurança.
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
       </div>
 
@@ -120,20 +165,21 @@ export default function UsuariosPage() {
             <TableRow>
               <TableHead>Usuário</TableHead>
               <TableHead>Código de Indicação</TableHead>
-              <TableHead>Saldo (Comissões)</TableHead>
+              <TableHead>Comissão</TableHead>
+              <TableHead>Saldo</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center">
+                <TableCell colSpan={5} className="h-24 text-center">
                   Carregando...
                 </TableCell>
               </TableRow>
             ) : usuarios.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                   Nenhum usuário encontrado.
                 </TableCell>
               </TableRow>
@@ -156,6 +202,9 @@ export default function UsuariosPage() {
                     )}
                   </TableCell>
                   <TableCell>
+                     {user.codigo_indicacao ? `${user.comissao_percentual || 10}%` : "-"}
+                  </TableCell>
+                  <TableCell>
                     <span className={Number(user.saldo_indicacoes) > 0 ? "text-green-600 font-medium" : ""}>
                       {Number(user.saldo_indicacoes || 0).toLocaleString("pt-BR", {
                         style: "currency",
@@ -164,12 +213,25 @@ export default function UsuariosPage() {
                     </span>
                   </TableCell>
                   <TableCell className="text-right flex items-center justify-end gap-2">
+                    <Button 
+                        variant="ghost" 
+                        size="sm"
+                        disabled={!user.codigo_indicacao}
+                        onClick={() => {
+                            setUsuarioHistorico(user);
+                            setHistoricoAberto(true);
+                        }}
+                    >
+                        Histórico
+                    </Button>
+
                     <Dialog
                       open={usuarioEditando?.id === user.id}
                       onOpenChange={(open) => {
                         if (open) {
                           setUsuarioEditando(user);
                           setNovoCodigo(user.codigo_indicacao || "");
+                          setNovoPercentual(user.comissao_percentual?.toString() || "10");
                         } else {
                           setUsuarioEditando(null);
                         }
@@ -189,21 +251,32 @@ export default function UsuariosPage() {
                             <Label>Usuário</Label>
                             <Input value={user.email} disabled />
                           </div>
-                          <div className="space-y-2">
-                            <Label>Código de Indicação</Label>
-                            <Input
-                              value={novoCodigo}
-                              onChange={(e) => setNovoCodigo(e.target.value)}
-                              placeholder="Ex: PARCEIRO10"
-                            />
-                            <p className="text-xs text-muted-foreground">
-                              Deixe em branco para remover o status de parceiro.
-                            </p>
+                          <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label>Código</Label>
+                                <Input
+                                  value={novoCodigo}
+                                  onChange={(e) => setNovoCodigo(e.target.value)}
+                                  placeholder="Ex: PARCEIRO10"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>Comissão (%)</Label>
+                                <Input
+                                  type="number"
+                                  value={novoPercentual}
+                                  onChange={(e) => setNovoPercentual(e.target.value)}
+                                  placeholder="10"
+                                />
+                              </div>
                           </div>
+                          <p className="text-xs text-muted-foreground">
+                             Deixe o código em branco para remover o status de parceiro.
+                          </p>
                           <Button
                             className="w-full"
                             onClick={() =>
-                              atualizarCodigo.mutate({ id: user.id, codigo: novoCodigo })
+                              atualizarCodigo.mutate({ id: user.id, codigo: novoCodigo, percentual: Number(novoPercentual) })
                             }
                             disabled={atualizarCodigo.isPending}
                           >
@@ -241,6 +314,42 @@ export default function UsuariosPage() {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={historicoAberto} onOpenChange={setHistoricoAberto}>
+        <DialogContent className="max-w-2xl">
+            <DialogHeader>
+                <DialogTitle>Histórico de Indicações - {usuarioHistorico?.nome}</DialogTitle>
+            </DialogHeader>
+            <div className="max-h-[400px] overflow-y-auto">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Data</TableHead>
+                            <TableHead>Cliente</TableHead>
+                            <TableHead>Valor</TableHead>
+                            <TableHead>Status</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {historico.length > 0 ? (
+                            historico.map((h: any) => (
+                                <TableRow key={h.id}>
+                                    <TableCell>{new Date(h.criado_em).toLocaleDateString()}</TableCell>
+                                    <TableCell>{h.clientes?.nome_completo || "Desconhecido"}</TableCell>
+                                    <TableCell>{Number(h.valor_total || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</TableCell>
+                                    <TableCell><Badge variant="outline">{h.status_locacao}</Badge></TableCell>
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={4} className="text-center text-muted-foreground h-20">Nenhuma indicação encontrada.</TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

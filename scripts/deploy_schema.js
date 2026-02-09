@@ -49,7 +49,8 @@ async function deploy() {
     await client.query(`
       ALTER TABLE public.usuarios 
       ADD COLUMN IF NOT EXISTS codigo_indicacao text UNIQUE,
-      ADD COLUMN IF NOT EXISTS saldo_indicacoes numeric(12,2) DEFAULT 0;
+      ADD COLUMN IF NOT EXISTS saldo_indicacoes numeric(12,2) DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS comissao_percentual numeric(5,2) DEFAULT 10;
     `);
     
     await client.query(`
@@ -73,6 +74,8 @@ async function deploy() {
     await client.query(`
       CREATE OR REPLACE FUNCTION public.atualizar_saldo_parceiro()
       RETURNS TRIGGER AS $$
+      DECLARE
+        percentual numeric;
       BEGIN
         -- Se o status mudou para 'confirmada' (ou inserido como confirmada)
         IF (TG_OP = 'INSERT' AND NEW.status_locacao = 'confirmada') OR 
@@ -80,9 +83,14 @@ async function deploy() {
             
             -- Verifica se tem código de indicação
             IF NEW.codigo_indicacao_usado IS NOT NULL THEN
-                -- Calcula comissão (10% do valor total ou fixo se não tiver valor)
+                -- Pega o percentual do parceiro
+                SELECT COALESCE(comissao_percentual, 10) INTO percentual
+                FROM public.usuarios
+                WHERE codigo_indicacao = NEW.codigo_indicacao_usado;
+
+                -- Calcula comissão
                 UPDATE public.usuarios
-                SET saldo_indicacoes = COALESCE(saldo_indicacoes, 0) + (COALESCE(NEW.valor_total, 0) * 0.10)
+                SET saldo_indicacoes = COALESCE(saldo_indicacoes, 0) + (COALESCE(NEW.valor_total, 0) * (percentual / 100.0))
                 WHERE codigo_indicacao = NEW.codigo_indicacao_usado;
             END IF;
         END IF;

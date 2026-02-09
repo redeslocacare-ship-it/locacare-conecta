@@ -27,8 +27,12 @@ const schema = z.object({
 
 type Valores = z.infer<typeof schema>;
 
+import { Pencil, Trash } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+
 export default function PoltronasPage() {
   const [aberto, setAberto] = useState(false);
+  const [poltronaEditando, setPoltronaEditando] = useState<any>(null);
   const [busca, setBusca] = useState("");
   const qc = useQueryClient();
 
@@ -63,25 +67,73 @@ export default function PoltronasPage() {
     },
   });
 
-  const criar = useMutation({
+  // Reset/Fill form on open/edit
+  React.useEffect(() => {
+    if (poltronaEditando) {
+        form.reset({
+            nome: poltronaEditando.nome,
+            descricao: poltronaEditando.descricao || "",
+            cor: poltronaEditando.cor || "",
+            material: poltronaEditando.material || "",
+            codigo_interno: poltronaEditando.codigo_interno || "",
+            status: poltronaEditando.status,
+        });
+    } else {
+        form.reset({
+            nome: "",
+            descricao: "",
+            cor: "",
+            material: "",
+            codigo_interno: "",
+            status: "disponivel",
+        });
+    }
+  }, [poltronaEditando, form]);
+
+  const salvar = useMutation({
     mutationFn: async (values: Valores) => {
-      const { error } = await supabase.from("poltronas").insert({
-        nome: values.nome,
-        descricao: values.descricao?.trim() ? values.descricao.trim() : null,
-        cor: values.cor?.trim() ? values.cor.trim() : null,
-        material: values.material?.trim() ? values.material.trim() : null,
-        codigo_interno: values.codigo_interno?.trim() ? values.codigo_interno.trim() : null,
-        status: values.status,
-      });
-      if (error) throw error;
+      if (poltronaEditando) {
+          const { error } = await supabase.from("poltronas").update({
+            nome: values.nome,
+            descricao: values.descricao?.trim() ? values.descricao.trim() : null,
+            cor: values.cor?.trim() ? values.cor.trim() : null,
+            material: values.material?.trim() ? values.material.trim() : null,
+            codigo_interno: values.codigo_interno?.trim() ? values.codigo_interno.trim() : null,
+            status: values.status,
+          }).eq("id", poltronaEditando.id);
+          if (error) throw error;
+      } else {
+          const { error } = await supabase.from("poltronas").insert({
+            nome: values.nome,
+            descricao: values.descricao?.trim() ? values.descricao.trim() : null,
+            cor: values.cor?.trim() ? values.cor.trim() : null,
+            material: values.material?.trim() ? values.material.trim() : null,
+            codigo_interno: values.codigo_interno?.trim() ? values.codigo_interno.trim() : null,
+            status: values.status,
+          });
+          if (error) throw error;
+      }
     },
     onSuccess: async () => {
-      toast.success("Poltrona cadastrada.");
+      toast.success(poltronaEditando ? "Poltrona atualizada." : "Poltrona cadastrada.");
       setAberto(false);
+      setPoltronaEditando(null);
       form.reset();
       await qc.invalidateQueries({ queryKey: ["admin", "poltronas"] });
     },
-    onError: () => toast.error("Não foi possível cadastrar a poltrona."),
+    onError: () => toast.error("Não foi possível salvar."),
+  });
+  
+  const excluir = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("poltronas").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      toast.success("Poltrona excluída.");
+      await qc.invalidateQueries({ queryKey: ["admin", "poltronas"] });
+    },
+    onError: () => toast.error("Erro ao excluir."),
   });
 
   return (
@@ -99,17 +151,20 @@ export default function PoltronasPage() {
              onChange={(e) => setBusca(e.target.value)}
              className="w-full sm:w-[250px]"
           />
-          <Dialog open={aberto} onOpenChange={setAberto}>
+          <Dialog open={aberto} onOpenChange={(open) => {
+            setAberto(open);
+            if (!open) setPoltronaEditando(null);
+          }}>
             <DialogTrigger asChild>
               <Button>Nova poltrona</Button>
             </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Nova poltrona</DialogTitle>
-            </DialogHeader>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{poltronaEditando ? "Editar poltrona" : "Nova poltrona"}</DialogTitle>
+              </DialogHeader>
 
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit((v) => criar.mutate(v))} className="grid gap-4 md:grid-cols-2">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit((v) => salvar.mutate(v))} className="grid gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="nome"
@@ -205,8 +260,8 @@ export default function PoltronasPage() {
                 />
 
                 <div className="md:col-span-2 flex justify-end">
-                  <Button type="submit" disabled={criar.isPending}>
-                    {criar.isPending ? "Salvando…" : "Salvar"}
+                  <Button type="submit" disabled={salvar.isPending}>
+                    {salvar.isPending ? "Salvando…" : "Salvar"}
                   </Button>
                 </div>
               </form>
@@ -225,10 +280,44 @@ export default function PoltronasPage() {
             {poltronas.map((p: any) => (
               <div key={p.id} className="rounded-lg border bg-background p-3">
                 <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="font-medium">{p.nome}</p>
-                  <span className="text-xs text-muted-foreground">{p.status}</span>
+                    <div>
+                      <div className="flex items-center gap-2">
+                          <p className="font-medium">{p.nome}</p>
+                          <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded uppercase">{p.status}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{p.codigo_interno ? `Código: ${p.codigo_interno}` : "Sem código"}</p>
+                    </div>
+                    
+                    <div className="flex gap-1 mt-2 sm:mt-0">
+                        <Button variant="ghost" size="icon" onClick={() => {
+                            setPoltronaEditando(p);
+                            setAberto(true);
+                        }}>
+                            <Pencil className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10">
+                                    <Trash className="h-4 w-4" />
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Excluir poltrona?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Tem certeza? Essa ação não pode ser desfeita.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => excluir.mutate(p.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                        Excluir
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </div>
                 </div>
-                <p className="text-xs text-muted-foreground">{p.codigo_interno ? `Código: ${p.codigo_interno}` : ""}</p>
               </div>
             ))}
             {poltronas.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma poltrona cadastrada.</p> : null}

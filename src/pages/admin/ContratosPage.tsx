@@ -1,19 +1,30 @@
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { FileText, Download, History, Printer } from "lucide-react";
+import { FileText, Download, History, Printer, Save, Trash, Eye } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export default function ContratosPage() {
   const [clienteSelecionado, setClienteSelecionado] = useState<string>("");
   const [tipoDoc, setTipoDoc] = useState<"contrato" | "proposta">("proposta");
   const [conteudoDoc, setConteudoDoc] = useState("");
+  const qc = useQueryClient();
   
   // Buscar clientes para o select
   const { data: clientes = [] } = useQuery({
@@ -21,6 +32,50 @@ export default function ContratosPage() {
     queryFn: async () => {
       const { data } = await supabase.from("clientes").select("id, nome_completo, cpf, endereco_completo, cidade, telefone_whatsapp").order("nome_completo");
       return data || [];
+    }
+  });
+
+  // Buscar histórico de contratos
+  const { data: historico = [] } = useQuery({
+    queryKey: ["admin", "contratos"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("contratos")
+        .select("id, tipo, criado_em, conteudo, clientes(nome_completo)")
+        .order("criado_em", { ascending: false });
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const salvarContrato = useMutation({
+    mutationFn: async () => {
+      if (!clienteSelecionado) throw new Error("Selecione um cliente.");
+      if (!conteudoDoc) throw new Error("Conteúdo vazio.");
+
+      const { error } = await supabase.from("contratos").insert({
+        cliente_id: clienteSelecionado,
+        tipo: tipoDoc,
+        conteudo: conteudoDoc
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Documento salvo no histórico.");
+      qc.invalidateQueries({ queryKey: ["admin", "contratos"] });
+    },
+    onError: () => toast.error("Erro ao salvar.")
+  });
+
+  const excluirContrato = useMutation({
+    mutationFn: async (id: string) => {
+        const { error } = await supabase.from("contratos").delete().eq("id", id);
+        if (error) throw error;
+    },
+    onSuccess: () => {
+        toast.success("Item removido do histórico.");
+        qc.invalidateQueries({ queryKey: ["admin", "contratos"] });
     }
   });
 
@@ -91,16 +146,17 @@ ${cliente.nome_completo}`;
       }
   };
 
-  const gerarPDF = () => {
-      if (!conteudoDoc) {
+  const gerarPDF = (conteudoOverride?: string, nomeCliente?: string) => {
+      const contentToUse = conteudoOverride || conteudoDoc;
+      if (!contentToUse) {
           toast.error("O documento está vazio.");
           return;
       }
       
       const doc = new jsPDF();
-      const splitText = doc.splitTextToSize(conteudoDoc, 180);
+      const splitText = doc.splitTextToSize(contentToUse, 180);
       doc.text(splitText, 15, 20);
-      doc.save(`${tipoDoc}_${clienteSelecionado || "doc"}.pdf`);
+      doc.save(`${tipoDoc}_${nomeCliente || clienteSelecionado || "doc"}.pdf`);
       toast.success("PDF gerado com sucesso!");
   };
 
@@ -113,65 +169,125 @@ ${cliente.nome_completo}`;
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
-          <Card className="md:col-span-1 shadow-md border-none">
-              <CardHeader>
-                  <CardTitle className="text-lg">Configuração</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                      <label className="text-sm font-medium">Tipo de Documento</label>
-                      <Select value={tipoDoc} onValueChange={(v: any) => handleTipoChange(v)}>
-                          <SelectTrigger>
-                              <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                              <SelectItem value="proposta">Proposta Comercial</SelectItem>
-                              <SelectItem value="contrato">Contrato de Locação</SelectItem>
-                          </SelectContent>
-                      </Select>
-                  </div>
+      <Tabs defaultValue="gerador" className="w-full">
+        <TabsList>
+            <TabsTrigger value="gerador">Novo Documento</TabsTrigger>
+            <TabsTrigger value="historico">Histórico</TabsTrigger>
+        </TabsList>
 
-                  <div className="space-y-2">
-                      <label className="text-sm font-medium">Selecione o Cliente</label>
-                      <Select value={clienteSelecionado} onValueChange={handleClienteChange}>
-                          <SelectTrigger>
-                              <SelectValue placeholder="Buscar cliente..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                              {clientes.map((c: any) => (
-                                  <SelectItem key={c.id} value={c.id}>
-                                      {c.nome_completo}
-                                  </SelectItem>
-                              ))}
-                          </SelectContent>
-                      </Select>
-                  </div>
+        <TabsContent value="gerador" className="mt-4">
+            <div className="grid gap-6 md:grid-cols-3">
+                <Card className="md:col-span-1 shadow-md border-none h-fit">
+                    <CardHeader>
+                        <CardTitle className="text-lg">Configuração</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Tipo de Documento</label>
+                            <Select value={tipoDoc} onValueChange={(v: any) => handleTipoChange(v)}>
+                                <SelectTrigger>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="proposta">Proposta Comercial</SelectItem>
+                                    <SelectItem value="contrato">Contrato de Locação</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-                  <Button className="w-full mt-4" onClick={gerarPDF} disabled={!conteudoDoc}>
-                      <Download className="mr-2 h-4 w-4" /> Baixar PDF
-                  </Button>
-              </CardContent>
-          </Card>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Selecione o Cliente</label>
+                            <Select value={clienteSelecionado} onValueChange={handleClienteChange}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Buscar cliente..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {clientes.map((c: any) => (
+                                        <SelectItem key={c.id} value={c.id}>
+                                            {c.nome_completo}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-          <Card className="md:col-span-2 shadow-md border-none">
-              <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle className="text-lg">Visualização / Edição</CardTitle>
-                  <FileText className="h-5 w-5 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                  <Textarea 
-                      className="min-h-[500px] font-mono text-sm leading-relaxed p-6 bg-gray-50 border-gray-200"
-                      value={conteudoDoc}
-                      onChange={(e) => setConteudoDoc(e.target.value)}
-                      placeholder="Selecione um cliente para gerar o documento..."
-                  />
-                  <p className="text-xs text-muted-foreground mt-2 text-right">
-                      * Você pode editar o texto livremente antes de gerar o PDF.
-                  </p>
-              </CardContent>
-          </Card>
-      </div>
+                        <div className="flex flex-col gap-2 mt-4">
+                            <Button className="w-full" variant="outline" onClick={() => salvarContrato.mutate()} disabled={!conteudoDoc || salvarContrato.isPending}>
+                                <Save className="mr-2 h-4 w-4" /> 
+                                {salvarContrato.isPending ? "Salvando..." : "Salvar no Histórico"}
+                            </Button>
+                            <Button className="w-full" onClick={() => gerarPDF()} disabled={!conteudoDoc}>
+                                <Download className="mr-2 h-4 w-4" /> Baixar PDF
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="md:col-span-2 shadow-md border-none">
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle className="text-lg">Visualização / Edição</CardTitle>
+                        <FileText className="h-5 w-5 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <Textarea 
+                            className="min-h-[500px] font-mono text-sm leading-relaxed p-6 bg-gray-50 border-gray-200"
+                            value={conteudoDoc}
+                            onChange={(e) => setConteudoDoc(e.target.value)}
+                            placeholder="Selecione um cliente para gerar o documento..."
+                        />
+                        <p className="text-xs text-muted-foreground mt-2 text-right">
+                            * Você pode editar o texto livremente antes de gerar o PDF.
+                        </p>
+                    </CardContent>
+                </Card>
+            </div>
+        </TabsContent>
+
+        <TabsContent value="historico" className="mt-4">
+            <Card className="shadow-soft">
+                <CardHeader>
+                    <CardTitle>Documentos Salvos</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Data</TableHead>
+                                <TableHead>Tipo</TableHead>
+                                <TableHead>Cliente</TableHead>
+                                <TableHead className="text-right">Ações</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {historico.length > 0 ? (
+                                historico.map((h: any) => (
+                                    <TableRow key={h.id}>
+                                        <TableCell>{new Date(h.criado_em).toLocaleDateString()} {new Date(h.criado_em).toLocaleTimeString()}</TableCell>
+                                        <TableCell>
+                                            <Badge variant="outline" className="uppercase">{h.tipo}</Badge>
+                                        </TableCell>
+                                        <TableCell>{h.clientes?.nome_completo || "—"}</TableCell>
+                                        <TableCell className="text-right flex items-center justify-end gap-2">
+                                            <Button size="sm" variant="ghost" onClick={() => gerarPDF(h.conteudo, h.clientes?.nome_completo)}>
+                                                <Printer className="h-4 w-4 mr-1" /> Imprimir
+                                            </Button>
+                                            <Button size="sm" variant="ghost" className="text-destructive" onClick={() => excluirContrato.mutate(h.id)}>
+                                                <Trash className="h-4 w-4" />
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">Nenhum documento salvo.</TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

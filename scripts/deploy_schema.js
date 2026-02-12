@@ -182,6 +182,11 @@ async function deploy() {
       $$;
     `);
 
+    // Migração: Novas tabelas (Saque e Contratos)
+    console.log("   🛠️  Aplicando tabelas de Saque e Contratos...");
+    const novasTabelasSql = fs.readFileSync(path.resolve(__dirname, '../supabase/migrations/20260207200000_novas_tabelas.sql'), 'utf8');
+    await client.query(novasTabelasSql);
+
     // Migração: Políticas RLS para leitura pública de planos (se necessário reforçar)
     await client.query(`
       DO $$ 

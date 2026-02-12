@@ -32,7 +32,18 @@ type Valores = z.infer<typeof schema>;
 
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Eye, FileText, Link as LinkIcon, Plus, Search } from "lucide-react";
+import { Eye, FileText, Link as LinkIcon, Plus, Search, Pencil, Trash } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function ClientesPage() {
   const [busca, setBusca] = useState("");
@@ -72,29 +83,69 @@ export default function ClientesPage() {
       enabled: !!clienteExpandido
   });
 
+  const [clienteEditando, setClienteEditando] = useState<any>(null);
+
   const form = useForm<Valores>({
     resolver: zodResolver(schema),
     defaultValues: { nome_completo: "", telefone_whatsapp: "", email: "", cidade: "Goiânia", bairro: "" },
   });
 
-  const criar = useMutation({
-    mutationFn: async (values: Valores) => {
-      const { error } = await supabase.from("clientes").insert({
-        nome_completo: values.nome_completo,
-        telefone_whatsapp: values.telefone_whatsapp,
-        email: values.email?.trim() ? values.email.trim() : null,
-        cidade: values.cidade,
-        bairro: values.bairro?.trim() ? values.bairro.trim() : null,
+  React.useEffect(() => {
+    if (clienteEditando) {
+      form.reset({
+        nome_completo: clienteEditando.nome_completo,
+        telefone_whatsapp: clienteEditando.telefone_whatsapp,
+        email: clienteEditando.email || "",
+        cidade: clienteEditando.cidade,
+        bairro: clienteEditando.bairro || "",
       });
-      if (error) throw error;
+    } else {
+      form.reset({ nome_completo: "", telefone_whatsapp: "", email: "", cidade: "Goiânia", bairro: "" });
+    }
+  }, [clienteEditando, form]);
+
+  const criarOuEditar = useMutation({
+    mutationFn: async (values: Valores) => {
+      if (clienteEditando) {
+        const { error } = await supabase.from("clientes").update({
+          nome_completo: values.nome_completo,
+          telefone_whatsapp: values.telefone_whatsapp,
+          email: values.email?.trim() ? values.email.trim() : null,
+          cidade: values.cidade,
+          bairro: values.bairro?.trim() ? values.bairro.trim() : null,
+        }).eq("id", clienteEditando.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("clientes").insert({
+          nome_completo: values.nome_completo,
+          telefone_whatsapp: values.telefone_whatsapp,
+          email: values.email?.trim() ? values.email.trim() : null,
+          cidade: values.cidade,
+          bairro: values.bairro?.trim() ? values.bairro.trim() : null,
+        });
+        if (error) throw error;
+      }
     },
     onSuccess: async () => {
-      toast.success("Cliente cadastrado.");
+      toast.success(clienteEditando ? "Cliente atualizado." : "Cliente cadastrado.");
       setAberto(false);
+      setClienteEditando(null);
       form.reset();
       await qc.invalidateQueries({ queryKey: ["admin", "clientes"] });
     },
-    onError: () => toast.error("Não foi possível cadastrar o cliente."),
+    onError: () => toast.error("Não foi possível salvar o cliente."),
+  });
+
+  const excluirCliente = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("clientes").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      toast.success("Cliente excluído.");
+      await qc.invalidateQueries({ queryKey: ["admin", "clientes"] });
+    },
+    onError: () => toast.error("Erro ao excluir. Verifique se existem locações vinculadas."),
   });
 
   const total = useMemo(() => clientes.length, [clientes]);
@@ -110,17 +161,20 @@ export default function ClientesPage() {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar por nome, telefone ou cidade" />
 
-          <Dialog open={aberto} onOpenChange={setAberto}>
+          <Dialog open={aberto} onOpenChange={(open) => {
+            setAberto(open);
+            if (!open) setClienteEditando(null);
+          }}>
             <DialogTrigger asChild>
               <Button variant="default">Novo cliente</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Novo cliente</DialogTitle>
+                <DialogTitle>{clienteEditando ? "Editar cliente" : "Novo cliente"}</DialogTitle>
               </DialogHeader>
 
               <Form {...form}>
-                <form onSubmit={form.handleSubmit((v) => criar.mutate(v))} className="grid gap-4 md:grid-cols-2">
+                <form onSubmit={form.handleSubmit((v) => criarOuEditar.mutate(v))} className="grid gap-4 md:grid-cols-2">
                   <FormField
                     control={form.control}
                     name="nome_completo"
@@ -192,8 +246,8 @@ export default function ClientesPage() {
                   />
 
                   <div className="md:col-span-2 flex justify-end">
-                    <Button type="submit" disabled={criar.isPending}>
-                      {criar.isPending ? "Salvando…" : "Salvar"}
+                    <Button type="submit" disabled={criarOuEditar.isPending}>
+                      {criarOuEditar.isPending ? "Salvando…" : "Salvar"}
                     </Button>
                   </div>
                 </form>
@@ -212,10 +266,12 @@ export default function ClientesPage() {
             {clientes.map((c: any) => (
               <div key={c.id} className="rounded-lg border bg-background overflow-hidden">
                 <div 
-                    className="p-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => setClienteExpandido(clienteExpandido === c.id ? null : c.id)}
+                    className="p-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between transition-colors hover:bg-muted/50"
                 >
-                    <div className="flex-1">
+                    <div 
+                        className="flex-1 cursor-pointer"
+                        onClick={() => setClienteExpandido(clienteExpandido === c.id ? null : c.id)}
+                    >
                         <div className="flex items-center gap-2">
                             <p className="font-medium">{c.nome_completo}</p>
                             {clienteExpandido === c.id ? <Badge variant="outline">Detalhes</Badge> : null}
@@ -227,8 +283,39 @@ export default function ClientesPage() {
                             {c.cidade} {c.bairro ? `• ${c.bairro}` : ""}
                         </p>
                     </div>
-                    <div className="text-xs text-muted-foreground whitespace-nowrap">
-                        {new Date(c.criado_em).toLocaleDateString("pt-BR")}
+                    <div className="flex items-center gap-2 mt-2 sm:mt-0">
+                        <div className="text-xs text-muted-foreground whitespace-nowrap mr-2">
+                             {new Date(c.criado_em).toLocaleDateString("pt-BR")}
+                        </div>
+                        
+                        <Button variant="ghost" size="icon" onClick={() => {
+                            setClienteEditando(c);
+                            setAberto(true);
+                        }}>
+                            <Pencil className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10">
+                                    <Trash className="h-4 w-4" />
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Excluir cliente?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Tem certeza que deseja excluir <b>{c.nome_completo}</b>? Isso também apagará o histórico e pode afetar locações existentes.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => excluirCliente.mutate(c.id)} className="bg-destructive hover:bg-destructive/90">
+                                        Excluir
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                     </div>
                 </div>
                 {clienteExpandido === c.id && (

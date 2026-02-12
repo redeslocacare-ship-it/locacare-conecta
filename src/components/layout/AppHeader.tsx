@@ -40,17 +40,6 @@ export function AppHeader({ className }: { className?: string }) {
               Dashboard
             </NavLink>
             <NavLink
-              to="/sync"
-              className={({ isActive }) =>
-                cn(
-                  "rounded-xl px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
-                  isActive && "bg-accent text-foreground",
-                )
-              }
-            >
-              Sincronização
-            </NavLink>
-            <NavLink
               to="/admin"
               className={({ isActive }) =>
                 cn(
@@ -69,11 +58,6 @@ export function AppHeader({ className }: { className?: string }) {
             <a href="/site" rel="noreferrer">
               Site
             </a>
-          </Button>
-          <Button asChild variant="ghost" size="icon" aria-label="Configurações">
-            <Link to="/sync">
-              <Settings className="h-5 w-5" />
-            </Link>
           </Button>
           <Button variant="ghost" size="icon" onClick={sair} aria-label="Sair">
             <LogOut className="h-5 w-5" />

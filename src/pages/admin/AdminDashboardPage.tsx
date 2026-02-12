@@ -143,18 +143,26 @@ export default function AdminDashboardPage() {
           
           {/* Espaço para gráficos futuros ou atalhos */}
           <div className="space-y-6">
-                <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-none shadow-md">
+                <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 border-none shadow-md text-white">
                     <CardHeader>
-                        <CardTitle className="text-primary">Atalhos Rápidos</CardTitle>
+                        <CardTitle className="text-white/90">Acesso Rápido</CardTitle>
                     </CardHeader>
                     <CardContent className="grid grid-cols-2 gap-4">
-                        <button className="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all text-gray-700 hover:text-primary">
-                            <FileText className="h-8 w-8 mb-2 opacity-80"/>
-                            <span className="font-medium">Gerar Contrato</span>
+                        <button className="flex flex-col items-center justify-center p-4 bg-white/10 rounded-xl hover:bg-white/20 transition-all backdrop-blur-sm">
+                            <FileText className="h-8 w-8 mb-2 opacity-90"/>
+                            <span className="font-medium text-sm">Contratos</span>
                         </button>
-                        <button className="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all text-gray-700 hover:text-primary">
-                            <Activity className="h-8 w-8 mb-2 opacity-80"/>
-                            <span className="font-medium">Nova Locação</span>
+                        <button className="flex flex-col items-center justify-center p-4 bg-white/10 rounded-xl hover:bg-white/20 transition-all backdrop-blur-sm">
+                            <Activity className="h-8 w-8 mb-2 opacity-90"/>
+                            <span className="font-medium text-sm">Locação</span>
+                        </button>
+                        <button className="flex flex-col items-center justify-center p-4 bg-white/10 rounded-xl hover:bg-white/20 transition-all backdrop-blur-sm">
+                            <Users className="h-8 w-8 mb-2 opacity-90"/>
+                            <span className="font-medium text-sm">Clientes</span>
+                        </button>
+                        <button className="flex flex-col items-center justify-center p-4 bg-white/10 rounded-xl hover:bg-white/20 transition-all backdrop-blur-sm">
+                            <Truck className="h-8 w-8 mb-2 opacity-90"/>
+                            <span className="font-medium text-sm">Logística</span>
                         </button>
                     </CardContent>
                 </Card>

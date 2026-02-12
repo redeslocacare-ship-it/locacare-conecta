@@ -20,6 +20,7 @@ import LocacoesPage from "@/pages/admin/LocacoesPage";
 import ConteudosPage from "@/pages/admin/ConteudosPage";
 import UsuariosPage from "@/pages/admin/UsuariosPage";
 import ContratosPage from "@/pages/admin/ContratosPage";
+import SaquesPage from "@/pages/admin/SaquesPage";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +68,7 @@ const App = () => (
               <Route path="conteudos" element={<ConteudosPage />} />
               <Route path="usuarios" element={<UsuariosPage />} />
               <Route path="contratos" element={<ContratosPage />} />
+              <Route path="saques" element={<SaquesPage />} />
             </Route>
 
             {/* atalho */}

@@ -94,6 +94,32 @@ export default function ConteudosPage() {
 
   const [passos, setPassos] = useState<{ titulo: string; descricao: string }[]>([]);
 
+  const formComo = useForm<Como>({
+    resolver: zodResolver(comoSchema),
+    defaultValues: {
+      passos_json: JSON.stringify(
+        {
+          passos: [
+            { titulo: "Você solicita o orçamento", descricao: "Pelo site ou WhatsApp, com datas e endereço." },
+            { titulo: "Confirmamos seus dados", descricao: "Validamos disponibilidade e alinhamos o plano." },
+            { titulo: "Entrega e instalação", descricao: "Instalamos a poltrona na sua casa com orientação." },
+            { titulo: "Suporte durante o uso", descricao: "Acompanhamento e suporte durante o período." },
+            { titulo: "Coleta na data combinada", descricao: "Retirada com agendamento e conferência." },
+          ],
+        },
+        null,
+        2,
+      ),
+      publicado: true,
+    },
+    values: comoFunciona
+      ? {
+          passos_json: JSON.stringify(comoFunciona.conteudo, null, 2),
+          publicado: comoFunciona.publicado,
+        }
+      : undefined,
+  });
+
   // Update form and local state when data loads
   React.useEffect(() => {
     if (comoFunciona?.conteudo?.passos) {
@@ -160,32 +186,6 @@ export default function ConteudosPage() {
         formFaq.reset({ pergunta: "", resposta: "", ordem_exibicao: 0, publicado: true });
     }
   }, [faqEditando, formFaq]);
-
-  const formComo = useForm<Como>({
-    resolver: zodResolver(comoSchema),
-    defaultValues: {
-      passos_json: JSON.stringify(
-        {
-          passos: [
-            { titulo: "Você solicita o orçamento", descricao: "Pelo site ou WhatsApp, com datas e endereço." },
-            { titulo: "Confirmamos seus dados", descricao: "Validamos disponibilidade e alinhamos o plano." },
-            { titulo: "Entrega e instalação", descricao: "Instalamos a poltrona na sua casa com orientação." },
-            { titulo: "Suporte durante o uso", descricao: "Acompanhamento e suporte durante o período." },
-            { titulo: "Coleta na data combinada", descricao: "Retirada com agendamento e conferência." },
-          ],
-        },
-        null,
-        2,
-      ),
-      publicado: true,
-    },
-    values: comoFunciona
-      ? {
-          passos_json: JSON.stringify(comoFunciona.conteudo, null, 2),
-          publicado: comoFunciona.publicado,
-        }
-      : undefined,
-  });
 
   const salvarDepo = useMutation({
     mutationFn: async (values: Depo) => {

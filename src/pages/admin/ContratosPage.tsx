@@ -30,7 +30,7 @@ export default function ContratosPage() {
   const { data: clientes = [] } = useQuery({
     queryKey: ["admin", "clientes_simples"],
     queryFn: async () => {
-      const { data } = await supabase.from("clientes").select("id, nome_completo, cpf, endereco_completo, cidade, telefone_whatsapp").order("nome_completo");
+      const { data } = await supabase.from("clientes").select("id, nome_completo, cpf_cnpj, logradouro, numero, bairro, cidade, telefone_whatsapp").order("nome_completo");
       return data || [];
     }
   });
@@ -112,7 +112,7 @@ Equipe LocaCare
           texto = `CONTRATO DE LOCAÇÃO DE BEM MÓVEL
 
 LOCADOR: LOCACARE SOLUÇÕES, CNPJ 00.000.000/0001-00.
-LOCATÁRIO: ${cliente.nome_completo}, CPF ${cliente.cpf || "___________"}, residente em ${cliente.endereco_completo || "___________________"}.
+LOCATÁRIO: ${cliente.nome_completo}, CPF ${cliente.cpf_cnpj || "___________"}, residente em ${cliente.logradouro || "Rua..."}, ${cliente.numero || "S/N"}, ${cliente.bairro || "Bairro..."}, ${cliente.cidade || "Cidade..."}.
 
 OBJETO: Locação de 01 (uma) Poltrona Reclinável Pós-Cirúrgica.
 

@@ -318,6 +318,9 @@ export default function ConteudosPage() {
           <TabsTrigger value="depoimentos">Depoimentos</TabsTrigger>
           <TabsTrigger value="faq">FAQ</TabsTrigger>
           <TabsTrigger value="como">Como funciona</TabsTrigger>
+          <TabsTrigger value="hero">Hero (Capa)</TabsTrigger>
+          <TabsTrigger value="sobre">Sobre Nós</TabsTrigger>
+          <TabsTrigger value="contato">Contato</TabsTrigger>
         </TabsList>
 
         <TabsContent value="depoimentos" className="mt-4 space-y-4">

@@ -162,37 +162,33 @@ export default function AdminDashboardPage() {
           </Card>
           
           <div className="space-y-6">
-                <Card className="bg-gradient-to-br from-slate-900 to-slate-800 border-none shadow-lg text-white overflow-hidden relative">
-                    {/* Background decoration */}
-                    <div className="absolute top-0 right-0 -mr-16 -mt-16 h-48 w-48 rounded-full bg-white/5 blur-3xl"></div>
-                    <div className="absolute bottom-0 left-0 -ml-16 -mb-16 h-48 w-48 rounded-full bg-blue-500/10 blur-3xl"></div>
-
-                    <CardHeader className="pb-2 relative z-10">
-                        <CardTitle className="text-white font-semibold flex items-center gap-2">
+                <Card className="bg-white border-gray-200 shadow-sm overflow-hidden">
+                    <CardHeader className="pb-2 border-b border-gray-100 bg-gray-50/50">
+                        <CardTitle className="text-gray-900 font-semibold flex items-center gap-2">
                             Acesso Rápido
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-2 gap-3 relative z-10">
-                        <Link to="/admin/contratos" className="group flex flex-col items-center justify-center p-4 bg-white/10 rounded-xl hover:bg-white/20 transition-all border border-white/5 hover:border-white/10 hover:-translate-y-0.5 active:scale-95">
-                            <FileSignature className="h-7 w-7 mb-3 text-blue-300 group-hover:text-blue-200 transition-colors"/>
-                            <span className="font-medium text-sm">Contratos</span>
+                    <CardContent className="grid grid-cols-2 gap-3 p-4">
+                        <Link to="/admin/contratos" className="group flex flex-col items-center justify-center p-4 bg-blue-50 rounded-xl hover:bg-blue-100 transition-all border border-blue-100 hover:border-blue-200 hover:-translate-y-0.5 active:scale-95">
+                            <FileSignature className="h-7 w-7 mb-2 text-blue-600 group-hover:text-blue-700 transition-colors"/>
+                            <span className="font-medium text-sm text-blue-900">Contratos</span>
                         </Link>
-                        <Link to="/admin/locacoes" className="group flex flex-col items-center justify-center p-4 bg-white/10 rounded-xl hover:bg-white/20 transition-all border border-white/5 hover:border-white/10 hover:-translate-y-0.5 active:scale-95">
-                            <Activity className="h-7 w-7 mb-3 text-emerald-300 group-hover:text-emerald-200 transition-colors"/>
-                            <span className="font-medium text-sm">Locações</span>
+                        <Link to="/admin/locacoes" className="group flex flex-col items-center justify-center p-4 bg-emerald-50 rounded-xl hover:bg-emerald-100 transition-all border border-emerald-100 hover:border-emerald-200 hover:-translate-y-0.5 active:scale-95">
+                            <Activity className="h-7 w-7 mb-2 text-emerald-600 group-hover:text-emerald-700 transition-colors"/>
+                            <span className="font-medium text-sm text-emerald-900">Locações</span>
                         </Link>
-                        <Link to="/admin/clientes" className="group flex flex-col items-center justify-center p-4 bg-white/10 rounded-xl hover:bg-white/20 transition-all border border-white/5 hover:border-white/10 hover:-translate-y-0.5 active:scale-95">
-                            <Users className="h-7 w-7 mb-3 text-orange-300 group-hover:text-orange-200 transition-colors"/>
-                            <span className="font-medium text-sm">Clientes</span>
+                        <Link to="/admin/clientes" className="group flex flex-col items-center justify-center p-4 bg-orange-50 rounded-xl hover:bg-orange-100 transition-all border border-orange-100 hover:border-orange-200 hover:-translate-y-0.5 active:scale-95">
+                            <Users className="h-7 w-7 mb-2 text-orange-600 group-hover:text-orange-700 transition-colors"/>
+                            <span className="font-medium text-sm text-orange-900">Clientes</span>
                         </Link>
-                        <Link to="/admin/poltronas" className="group flex flex-col items-center justify-center p-4 bg-white/10 rounded-xl hover:bg-white/20 transition-all border border-white/5 hover:border-white/10 hover:-translate-y-0.5 active:scale-95">
-                            <Truck className="h-7 w-7 mb-3 text-purple-300 group-hover:text-purple-200 transition-colors"/>
-                            <span className="font-medium text-sm">Logística</span>
+                        <Link to="/admin/poltronas" className="group flex flex-col items-center justify-center p-4 bg-purple-50 rounded-xl hover:bg-purple-100 transition-all border border-purple-100 hover:border-purple-200 hover:-translate-y-0.5 active:scale-95">
+                            <Armchair className="h-7 w-7 mb-2 text-purple-600 group-hover:text-purple-700 transition-colors"/>
+                            <span className="font-medium text-sm text-purple-900">Poltronas</span>
                         </Link>
                     </CardContent>
                 </Card>
 
-                <Card className="shadow-sm border-gray-200 bg-blue-50/50">
+                <Card className="shadow-sm border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
                     <CardContent className="p-6 flex items-center gap-4">
                         <div className="p-3 bg-blue-100 text-blue-600 rounded-full">
                             <Activity className="h-6 w-6" />

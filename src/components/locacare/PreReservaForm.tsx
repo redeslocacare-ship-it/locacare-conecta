@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { leadSchema, type LeadFormValues } from "@/lib/validacoes";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
  */
 export function PreReservaForm({ id }: { id: string }) {
   const [enviando, setEnviando] = useState(false);
+
+  // Busca planos ativos
+  const { data: planos = [] } = useQuery({
+    queryKey: ["public", "planos_locacao"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("planos_locacao")
+        .select("id, nome_plano, dias_duracao, preco_base")
+        .eq("ativo", true)
+        .order("preco_base", { ascending: true });
+      
+      if (error) {
+        console.error("Erro ao carregar planos:", error);
+        return [];
+      }
+      return data;
+    },
+  });
 
   const tiposCirurgia = useMemo(
     () => [
@@ -46,6 +65,7 @@ export function PreReservaForm({ id }: { id: string }) {
       data_inicio_desejada: "",
       mensagem: "",
       codigo_indicacao: "",
+      plano_locacao_id: "",
     },
   });
 
@@ -84,6 +104,7 @@ export function PreReservaForm({ id }: { id: string }) {
         status_locacao: "lead",
         data_inicio_prevista: values.data_inicio_desejada?.trim() ? values.data_inicio_desejada : null,
         codigo_indicacao_usado: values.codigo_indicacao?.trim() || null,
+        plano_locacao_id: values.plano_locacao_id || null,
       });
 
       if (erroLocacao) throw erroLocacao;
@@ -195,6 +216,31 @@ export function PreReservaForm({ id }: { id: string }) {
                           {tiposCirurgia.map((t) => (
                             <SelectItem key={t} value={t}>
                               {t}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="plano_locacao_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Plano de Interesse</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione um plano" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {planos.map((p: any) => (
+                            <SelectItem key={p.id} value={p.id}>
+                              {p.nome_plano} - R$ {Number(p.preco_base).toFixed(2)} ({p.dias_duracao} dias)
                             </SelectItem>
                           ))}
                         </SelectContent>

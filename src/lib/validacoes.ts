@@ -25,6 +25,7 @@ export const leadSchema = z.object({
   data_inicio_desejada: z.string().trim().optional().or(z.literal("")),
   mensagem: z.string().trim().max(1000, "Mensagem muito longa").optional().or(z.literal("")),
   codigo_indicacao: z.string().trim().max(50, "Código inválido").optional().or(z.literal("")),
+  plano_locacao_id: z.string().trim().uuid("Selecione um plano válido").optional().or(z.literal("")),
 });
 
 export type LeadFormValues = z.infer<typeof leadSchema>;

@@ -572,24 +572,62 @@ export default function ConteudosPage() {
         <TabsContent value="como" className="mt-4 space-y-4">
           <Card className="shadow-soft">
             <CardHeader>
-              <CardTitle className="text-xl">Como funciona (JSON)</CardTitle>
+              <CardTitle className="text-xl">Como funciona</CardTitle>
             </CardHeader>
             <CardContent>
               <Form {...formComo}>
-                <form onSubmit={formComo.handleSubmit((v) => salvarComo.mutate(v))} className="space-y-4">
+                <form onSubmit={formComo.handleSubmit((v) => salvarComo.mutate(v))} className="space-y-6">
+                  
+                  <div className="space-y-4">
+                    {passos.map((passo, index) => (
+                      <div key={index} className="grid gap-4 rounded-lg border p-4 md:grid-cols-[1fr_1fr_auto]">
+                        <div className="space-y-2">
+                          <FormLabel>Título do Passo {index + 1}</FormLabel>
+                          <Input 
+                            value={passo.titulo} 
+                            onChange={(e) => updatePasso(index, "titulo", e.target.value)}
+                            placeholder="Ex: Solicite o orçamento"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <FormLabel>Descrição</FormLabel>
+                          <Textarea 
+                            value={passo.descricao} 
+                            onChange={(e) => updatePasso(index, "descricao", e.target.value)}
+                            placeholder="Detalhes desta etapa..."
+                            rows={2}
+                          />
+                        </div>
+                        <div className="flex items-end pb-2">
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="icon" 
+                            className="text-destructive hover:bg-destructive/10"
+                            onClick={() => removePasso(index)}
+                            disabled={passos.length <= 1}
+                          >
+                            <Trash className="h-5 w-5" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <Button type="button" variant="outline" onClick={addPasso} className="w-full border-dashed">
+                    <Plus className="mr-2 h-4 w-4" /> Adicionar Passo
+                  </Button>
+
+                  {/* Hidden field for validation/submission */}
                   <FormField
                     control={formComo.control}
                     name="passos_json"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Conteúdo</FormLabel>
+                      <FormItem className="hidden">
                         <FormControl>
-                          <Textarea rows={14} {...field} />
+                          <Input {...field} />
                         </FormControl>
                         <FormMessage />
-                        <p className="text-xs text-muted-foreground">
-                          Formato esperado: {`{ "passos": [ { "titulo": "...", "descricao": "..." } ] }`}
-                        </p>
                       </FormItem>
                     )}
                   />
@@ -613,7 +651,7 @@ export default function ConteudosPage() {
 
                   <div className="flex justify-end">
                     <Button type="submit" disabled={salvarComo.isPending}>
-                      {salvarComo.isPending ? "Salvando…" : "Salvar"}
+                      {salvarComo.isPending ? "Salvando…" : "Salvar Alterações"}
                     </Button>
                   </div>
                 </form>

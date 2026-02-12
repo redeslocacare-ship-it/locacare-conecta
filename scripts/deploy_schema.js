@@ -182,6 +182,21 @@ async function deploy() {
       $$;
     `);
 
+    // Migração: RPC para atualizar senha de parceiro
+    await client.query(`
+      CREATE OR REPLACE FUNCTION public.admin_update_password(target_user_id uuid, new_password text)
+      RETURNS void
+      LANGUAGE plpgsql
+      SECURITY DEFINER
+      AS $$
+      BEGIN
+        UPDATE auth.users
+        SET encrypted_password = crypt(new_password, gen_salt('bf'))
+        WHERE id = target_user_id;
+      END;
+      $$;
+    `);
+
     // Migração: Garantir has_role e user_roles (Crítico para RLS)
     console.log("   🛡️  Garantindo função has_role e tabela user_roles...");
     await client.query(`

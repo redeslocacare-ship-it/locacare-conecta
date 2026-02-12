@@ -40,6 +40,7 @@ export default function UsuariosPage() {
   const [usuarioEditando, setUsuarioEditando] = useState<any>(null);
   const [novoCodigo, setNovoCodigo] = useState("");
   const [novoPercentual, setNovoPercentual] = useState("10");
+  const [novaSenha, setNovaSenha] = useState("");
   const [historicoAberto, setHistoricoAberto] = useState(false);
   const [usuarioHistorico, setUsuarioHistorico] = useState<any>(null);
   const qc = useQueryClient();
@@ -49,7 +50,7 @@ export default function UsuariosPage() {
     queryFn: async () => {
       let q = supabase
         .from("usuarios")
-        .select("id, nome, email, codigo_indicacao, saldo_indicacoes, comissao_percentual, criado_em")
+        .select("id, user_id, nome, email, codigo_indicacao, saldo_indicacoes, comissao_percentual, criado_em")
         .order("criado_em", { ascending: false });
 
       if (busca.trim()) {
@@ -80,7 +81,8 @@ export default function UsuariosPage() {
   });
 
   const atualizarCodigo = useMutation({
-    mutationFn: async ({ id, codigo, percentual }: { id: string; codigo: string, percentual: number }) => {
+    mutationFn: async ({ id, codigo, percentual, senha, user_id }: { id: string; codigo: string, percentual: number, senha?: string, user_id: string }) => {
+      // 1. Atualiza dados públicos (código e comissão)
       const { error } = await supabase
         .from("usuarios")
         .update({ 
@@ -89,14 +91,24 @@ export default function UsuariosPage() {
         })
         .eq("id", id);
       if (error) throw error;
+
+      // 2. Se tiver senha, atualiza via RPC (auth.users)
+      if (senha && senha.trim().length >= 6) {
+          const { error: rpcError } = await supabase.rpc("admin_update_password", {
+              target_user_id: user_id,
+              new_password: senha.trim()
+          });
+          if (rpcError) throw rpcError;
+      }
     },
     onSuccess: () => {
       toast.success("Dados do parceiro atualizados.");
       setUsuarioEditando(null);
       setNovoCodigo("");
+      setNovaSenha("");
       qc.invalidateQueries({ queryKey: ["admin", "usuarios"] });
     },
-    onError: () => toast.error("Erro ao atualizar. Verifique os dados."),
+    onError: (e: any) => toast.error(e.message || "Erro ao atualizar. Verifique os dados."),
   });
 
   const [novoParceiroAberto, setNovoParceiroAberto] = useState(false);
@@ -305,6 +317,7 @@ export default function UsuariosPage() {
                           setUsuarioEditando(user);
                           setNovoCodigo(user.codigo_indicacao || "");
                           setNovoPercentual(user.comissao_percentual?.toString() || "10");
+                          setNovaSenha("");
                         } else {
                           setUsuarioEditando(null);
                         }
@@ -324,6 +337,18 @@ export default function UsuariosPage() {
                             <Label>Usuário</Label>
                             <Input value={user.email} disabled />
                           </div>
+                          
+                          <div className="space-y-2">
+                             <Label>Nova Senha (Opcional)</Label>
+                             <Input 
+                               type="password"
+                               placeholder="******" 
+                               value={novaSenha}
+                               onChange={e => setNovaSenha(e.target.value)}
+                             />
+                             <p className="text-xs text-muted-foreground">Preencha apenas se desejar alterar a senha de acesso.</p>
+                          </div>
+
                           <div className="grid grid-cols-2 gap-4">
                               <div className="space-y-2">
                                 <Label>Código</Label>
@@ -349,7 +374,13 @@ export default function UsuariosPage() {
                           <Button
                             className="w-full"
                             onClick={() =>
-                              atualizarCodigo.mutate({ id: user.id, codigo: novoCodigo, percentual: Number(novoPercentual) })
+                              atualizarCodigo.mutate({ 
+                                  id: user.id, 
+                                  codigo: novoCodigo, 
+                                  percentual: Number(novoPercentual),
+                                  senha: novaSenha,
+                                  user_id: user.user_id // ID do Auth
+                              })
                             }
                             disabled={atualizarCodigo.isPending}
                           >

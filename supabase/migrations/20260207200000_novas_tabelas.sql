@@ -31,8 +31,8 @@ DROP POLICY IF EXISTS "Admin gerencia saques" ON public.solicitacoes_saque;
 CREATE POLICY "Admin gerencia saques" ON public.solicitacoes_saque
     FOR ALL
     TO authenticated
-    USING (public.has_role(auth.uid(), 'admin'))
-    WITH CHECK (public.has_role(auth.uid(), 'admin'));
+    USING (public.has_role(auth.uid(), 'admin'::public.app_role))
+    WITH CHECK (public.has_role(auth.uid(), 'admin'::public.app_role));
 
 DROP POLICY IF EXISTS "Usuario ve seus saques" ON public.solicitacoes_saque;
 CREATE POLICY "Usuario ve seus saques" ON public.solicitacoes_saque
@@ -51,9 +51,10 @@ DROP POLICY IF EXISTS "Admin gerencia contratos" ON public.contratos;
 CREATE POLICY "Admin gerencia contratos" ON public.contratos
     FOR ALL
     TO authenticated
-    USING (public.has_role(auth.uid(), 'admin'));
+    USING (public.has_role(auth.uid(), 'admin'::public.app_role));
 
 -- Trigger update
+DROP TRIGGER IF EXISTS trg_solicitacoes_saque_atualizado_em ON public.solicitacoes_saque;
 CREATE TRIGGER trg_solicitacoes_saque_atualizado_em
 BEFORE UPDATE ON public.solicitacoes_saque
 FOR EACH ROW EXECUTE FUNCTION public.atualizar_atualizado_em();

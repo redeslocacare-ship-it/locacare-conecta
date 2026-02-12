@@ -182,6 +182,52 @@ async function deploy() {
       $$;
     `);
 
+    // Migração: Garantir has_role e user_roles (Crítico para RLS)
+    console.log("   🛡️  Garantindo função has_role e tabela user_roles...");
+    await client.query(`
+      DO $$ BEGIN
+        CREATE TYPE public.app_role AS ENUM ('admin', 'atendimento', 'logistica');
+      EXCEPTION
+        WHEN duplicate_object THEN null;
+      END $$;
+
+      CREATE OR REPLACE FUNCTION public.atualizar_atualizado_em()
+      RETURNS TRIGGER
+      LANGUAGE plpgsql
+      SET search_path = public
+      AS $$
+      BEGIN
+        NEW.atualizado_em = now();
+        RETURN NEW;
+      END;
+      $$;
+
+      CREATE TABLE IF NOT EXISTS public.user_roles (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+        role public.app_role NOT NULL,
+        criado_em timestamptz NOT NULL DEFAULT now(),
+        UNIQUE (user_id, role)
+      );
+      
+      ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
+
+      CREATE OR REPLACE FUNCTION public.has_role(_user_id uuid, _role public.app_role)
+      RETURNS boolean
+      LANGUAGE sql
+      STABLE
+      SECURITY DEFINER
+      SET search_path = public
+      AS $$
+        SELECT EXISTS (
+          SELECT 1
+          FROM public.user_roles ur
+          WHERE ur.user_id = _user_id
+            AND ur.role = _role
+        );
+      $$;
+    `);
+
     // Migração: Novas tabelas (Saque e Contratos)
     console.log("   🛠️  Aplicando tabelas de Saque e Contratos...");
     const novasTabelasSql = fs.readFileSync(path.resolve(__dirname, '../supabase/migrations/20260207200000_novas_tabelas.sql'), 'utf8');

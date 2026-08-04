@@ -1,25 +1,24 @@
 import React, { useMemo, useRef } from "react";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
-import { ShieldCheck, Truck, Zap, HandHeart, Sparkles } from "lucide-react";
+import { ShieldCheck, Truck, Zap, HandHeart, Check, Quote, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { PublicHeader } from "@/components/locacare/PublicHeader";
 import { PublicFooter } from "@/components/locacare/PublicFooter";
 import { PreReservaForm } from "@/components/locacare/PreReservaForm";
-import { WhatsAppFloatingButton } from "@/components/locacare/WhatsAppFloatingButton";
-import { SectionDivider } from "@/components/locacare/SectionDivider";
-import { BrandLogo } from "@/components/locacare/BrandLogo";
+import { MobileTabBar } from "@/components/locacare/MobileTabBar";
+import { Reveal, Stagger, StaggerItem, ShinyText, TiltCard, ScrollProgress, Marquee } from "@/components/locacare/motion";
 import { useComoFunciona, useDepoimentosPublicados, useFaqsPublicados, usePlanosAtivos } from "@/hooks/useConteudosPublicos";
 import heroPoltrona from "@/assets/hero-poltrona.jpg";
 
 /**
  * Home pública (conversão) — LocaCare
  *
- * Direção: Dark Neon premium (grafite + teal)
- * - Tema escuro por padrão (tokens)
- * - Hero “emblema iluminado” com glow
- * - Divisórias diagonais com motion entre seções
+ * Direção: White Luxury (marfim + petróleo + champanhe)
+ * - Base clara e minimalista, tipografia editorial (serif)
+ * - Motion sutil: reveals com blur, parallax leve, brilho dourado
+ * - Mobile: sensação de app (tab bar inferior, toques generosos)
+ * - Telefone/WhatsApp removidos temporariamente — conversão via formulário
  */
 const Index = () => {
   const reduzirAnimacao = useReducedMotion();
@@ -30,13 +29,9 @@ const Index = () => {
   const { data: passos = [] } = useComoFunciona();
   const { data: planos = [] } = usePlanosAtivos();
 
-  const mensagem = "Olá, quero alugar uma poltrona pós-cirúrgica com a LocaCare.";
-  const whatsappHref = `https://wa.me/5562936180658?text=${encodeURIComponent(mensagem)}`;
-
-  // Parallax sutil (scroll) no hero — leve e respeita reduced motion
+  // Parallax sutil no hero — respeita reduced motion
   const { scrollY } = useScroll();
-  const heroImageY = useTransform(scrollY, [0, 900], [0, -24]);
-  const heroImageRotate = useTransform(scrollY, [0, 900], [0, -1.2]);
+  const heroImageY = useTransform(scrollY, [0, 900], [0, -30]);
 
   const beneficios = useMemo(
     () => [
@@ -51,7 +46,7 @@ const Index = () => {
         icon: HandHeart,
       },
       {
-        titulo: "Aluguel mais econômico que compra",
+        titulo: "Mais econômico que comprar",
         descricao: "Uso temporário com melhor custo-benefício para o período pós-operatório.",
         icon: ShieldCheck,
       },
@@ -68,311 +63,318 @@ const Index = () => {
     contatoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.08,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 10 },
-    show: { opacity: 1, y: 0 },
-  };
-
   return (
-    <div className="min-h-screen bg-background">
+    <div id="topo" className="min-h-screen bg-background">
+      <ScrollProgress />
       <PublicHeader onSolicitarOrcamento={rolarParaContato} />
-      <WhatsAppFloatingButton />
+      <MobileTabBar onSolicitarOrcamento={rolarParaContato} />
 
-      <main>
+      {/* padding inferior no mobile para a tab bar não cobrir conteúdo */}
+      <main className="pb-28 md:pb-0">
         {/* HERO */}
         <section className="relative overflow-hidden bg-hero">
-          {/* Spotlights */}
-          <div className="pointer-events-none absolute inset-0">
-            <div className="absolute -left-24 top-16 h-72 w-72 rounded-full bg-primary/15 blur-3xl animate-float" />
-            <div className="absolute -right-28 top-10 h-80 w-80 rounded-full bg-accent/35 blur-3xl animate-float" />
-            <div className="absolute left-1/2 top-[68%] h-[26rem] w-[26rem] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl animate-float" />
-          </div>
-
-          {/* Shine */}
-          <div className="pointer-events-none absolute inset-0 opacity-90 [mask-image:radial-gradient(60%_50%_at_50%_35%,black,transparent)]">
-            <div className="absolute -inset-24 bg-shine animate-spotlight" />
-          </div>
-
-          <div className="container relative py-16 md:py-24">
-            <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
-              <motion.div
-                initial={reduzirAnimacao ? false : { opacity: 0, y: 14 }}
-                animate={reduzirAnimacao ? undefined : { opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-              >
-                {/* Emblema iluminado (marca em destaque máximo) */}
-                <div className="inline-flex items-center gap-3 rounded-2xl border bg-card/60 px-4 py-3 shadow-lift backdrop-blur">
-                  <div className="relative">
-                    <div className="pointer-events-none absolute -inset-2 rounded-3xl bg-primary/20 blur-xl" />
-                    <BrandLogo compact className="relative" />
+          <div className="container relative py-14 md:py-24 lg:py-28">
+            <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
+              <div>
+                <Reveal>
+                  <div className="inline-flex items-center gap-2 rounded-full border bg-card px-4 py-1.5 shadow-soft">
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-mint" />
+                    <span className="text-xs font-medium tracking-wide text-muted-foreground">
+                      Entrega e instalação em Goiânia
+                    </span>
                   </div>
-                  <div className="hidden sm:block">
-                    <p className="text-xs text-muted-foreground">Atendimento em Goiânia</p>
-                    <p className="text-sm font-semibold">Entrega + instalação</p>
+                </Reveal>
+
+                <Reveal delay={0.08}>
+                  <h1 className="mt-6 text-balance text-4xl leading-[1.06] md:text-6xl">
+                    Recuperação com <em className="font-display italic text-primary">conforto</em> e{" "}
+                    <ShinyText>elegância</ShinyText>, na sua casa
+                  </h1>
+                </Reveal>
+
+                <Reveal delay={0.16}>
+                  <p className="mt-6 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground md:text-lg">
+                    Alugue uma poltrona reclinável com função lift para o pós-operatório. Mais segurança para levantar,
+                    mais conforto para descansar — com suporte do começo ao fim.
+                  </p>
+                </Reveal>
+
+                <Reveal delay={0.24}>
+                  <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <Button size="lg" onClick={rolarParaContato} className="group rounded-full px-8">
+                      Solicitar orçamento
+                      <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </Button>
+                    <Button size="lg" variant="outline" asChild className="rounded-full px-8">
+                      <a href="#beneficios">Conhecer benefícios</a>
+                    </Button>
                   </div>
-                  <div className="ml-auto hidden sm:flex items-center gap-2 rounded-xl bg-background/40 px-3 py-2">
-                    <Sparkles className="h-4 w-4 text-primary" />
-                    <span className="text-xs text-muted-foreground">Recuperação com autonomia</span>
-                  </div>
-                </div>
+                </Reveal>
 
-                <h1 className="mt-6 text-balance text-4xl leading-[1.02] md:text-6xl">
-                  Poltrona pós-cirúrgica com efeito lift — conforto premium em casa
-                </h1>
-                <p className="mt-5 max-w-xl text-pretty text-base text-muted-foreground md:text-lg">
-                  Alugue uma poltrona reclinável lift para pós-operatório em Goiânia. Mais segurança para levantar, mais
-                  conforto para descansar e suporte do começo ao fim.
-                </p>
+                <Stagger className="mt-10 grid grid-cols-3 gap-3">
+                  {[
+                    { valor: "Até 24h", legenda: "Entrega em Goiânia" },
+                    { valor: "Incluso", legenda: "Instalação em casa" },
+                    { valor: "Sempre", legenda: "Suporte no uso" },
+                  ].map((s) => (
+                    <StaggerItem key={s.legenda} className="rounded-2xl border bg-card p-4 shadow-soft">
+                      <p className="font-display text-lg leading-none md:text-xl">{s.valor}</p>
+                      <p className="mt-1.5 text-xs text-muted-foreground md:text-sm">{s.legenda}</p>
+                    </StaggerItem>
+                  ))}
+                </Stagger>
+              </div>
 
-                <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <Button asChild variant="default" size="lg" className="hover-lift">
-                    <a href={whatsappHref} target="_blank" rel="noreferrer">
-                      Chamar no WhatsApp
-                    </a>
-                  </Button>
-                  <Button variant="hero" size="lg" onClick={rolarParaContato} className="hover-lift">
-                    Solicitar orçamento
-                  </Button>
-                </div>
+              <Reveal delay={0.15} className="relative">
+                <div className="pointer-events-none absolute -inset-8 rounded-[3rem] bg-accent/60 blur-3xl" />
 
-                {/* Prova social */}
-                <motion.div
-                  className="mt-7 flex flex-wrap gap-3"
-                  variants={containerVariants}
-                  initial={reduzirAnimacao ? false : "hidden"}
-                  animate={reduzirAnimacao ? undefined : "show"}
-                >
-                  <motion.div variants={itemVariants} className="rounded-xl border glass p-4 shadow-soft">
-                    <p className="text-xl font-semibold leading-none">Até 24h</p>
-                    <p className="mt-1 text-sm text-muted-foreground">Entrega (Goiânia)</p>
-                  </motion.div>
-                </motion.div>
-
-                <div className="mt-5 grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
-                  <div className="rounded-lg border glass p-3 shadow-soft">Suporte durante o uso</div>
-                  <div className="rounded-lg border glass p-3 shadow-soft">Coleta agendada</div>
-                  <div className="rounded-lg border glass p-3 shadow-soft">Pagamento facilitado</div>
-                </div>
-              </motion.div>
-
-              <motion.div
-                className="relative"
-                initial={reduzirAnimacao ? false : { opacity: 0, scale: 0.98 }}
-                animate={reduzirAnimacao ? undefined : { opacity: 1, scale: 1 }}
-                transition={{ duration: 0.7, ease: "easeOut", delay: 0.05 }}
-              >
-                <div className="pointer-events-none absolute -inset-6 rounded-[2rem] bg-primary/10 blur-2xl" />
-
-                <div className="relative rounded-3xl border bg-card/70 p-5 shadow-lift backdrop-blur">
-                  <p className="font-semibold">Produto principal</p>
-                  <p className="mt-1 text-sm text-muted-foreground">Poltrona lift reclinável PU preta</p>
-
-                  <motion.div
-                    className="mt-4 overflow-hidden rounded-2xl border bg-background/40 shadow-soft"
-                    style={reduzirAnimacao ? undefined : { y: heroImageY, rotate: heroImageRotate }}
-                  >
+                <motion.div style={reduzirAnimacao ? undefined : { y: heroImageY }}>
+                  <TiltCard className="relative overflow-hidden rounded-[2rem] border bg-card shadow-lift">
                     <img
                       src={heroPoltrona}
                       alt="Poltrona lift reclinável para pós-operatório (produto LocaCare)"
-                      className="aspect-[16/10] w-full object-cover"
+                      className="aspect-[4/3] w-full object-cover"
                       loading="eager"
                       decoding="async"
                     />
-                  </motion.div>
 
-                  <div className="mt-4 rounded-2xl border bg-background/30 p-5 shadow-soft">
-                    <p className="text-sm text-muted-foreground">Ideal para:</p>
-                    <ul className="mt-2 space-y-1 text-sm">
-                      <li>• Abdominoplastia e mamoplastia</li>
-                      <li>• Ortopedia (coluna, joelho, ombro)</li>
-                      <li>• Idosos e mobilidade reduzida</li>
-                    </ul>
-                  </div>
-
-                  <p className="mt-4 text-xs text-muted-foreground">Atendimento: (62) 93618-0658 • contato@locacare.com.br</p>
-                </div>
-              </motion.div>
+                    <div className="absolute inset-x-4 bottom-4 rounded-2xl border bg-background/85 p-4 backdrop-blur-xl md:inset-x-6 md:bottom-6 md:p-5">
+                      <p className="font-display text-lg">Poltrona lift reclinável</p>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Ideal para cirurgias plásticas, ortopédicas e mobilidade reduzida.
+                      </p>
+                    </div>
+                  </TiltCard>
+                </motion.div>
+              </Reveal>
             </div>
           </div>
-
-          {/* Divisor */}
-          <SectionDivider className="text-background" />
         </section>
+
+        {/* FAIXA DE CONFIANÇA */}
+        <Marquee
+          items={[
+            "Entrega em até 24h em Goiânia",
+            "Instalação inclusa",
+            "Suporte durante todo o uso",
+            "Higienização profissional",
+            "Coleta agendada ao fim do período",
+            "Pagamento facilitado",
+          ]}
+        />
 
         {/* BENEFÍCIOS */}
-        <section id="beneficios" className="container py-14 md:py-18 scroll-mt-24">
-          <div>
-            <h2 className="text-3xl md:text-4xl">Benefícios que fazem diferença</h2>
-            <p className="mt-2 text-muted-foreground">Conforto e segurança no pós-operatório — sem complicação.</p>
-          </div>
+        <section id="beneficios" className="container scroll-mt-24 py-16 md:py-24">
+          <Reveal>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">Por que a LocaCare</p>
+            <h2 className="mt-3 max-w-2xl text-3xl md:text-4xl">Benefícios que fazem diferença na sua recuperação</h2>
+          </Reveal>
 
-          <motion.div
-            className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4"
-            variants={containerVariants}
-            initial={reduzirAnimacao ? false : "hidden"}
-            whileInView={reduzirAnimacao ? undefined : "show"}
-            viewport={{ once: true, margin: "-80px" }}
-          >
+          <Stagger className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {beneficios.map((b) => (
-              <motion.div key={b.titulo} variants={itemVariants}>
-                <Card className="shadow-soft hover-lift bg-card/70 backdrop-blur">
-                  <CardHeader className="space-y-3">
-                    <div className="relative inline-flex h-10 w-10 items-center justify-center rounded-xl border bg-background/30 shadow-soft">
-                      <div className="pointer-events-none absolute -inset-2 rounded-2xl bg-primary/15 blur-xl" />
-                      <b.icon className="relative h-5 w-5 text-primary" />
-                    </div>
-                    <CardTitle className="text-xl">{b.titulo}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">{b.descricao}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
+              <StaggerItem key={b.titulo}>
+                <div className="card-luxe hover-lift h-full p-6">
+                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-accent text-primary">
+                    <b.icon className="h-5 w-5" strokeWidth={1.75} />
+                  </div>
+                  <h3 className="mt-5 font-display text-xl">{b.titulo}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{b.descricao}</p>
+                </div>
+              </StaggerItem>
             ))}
-          </motion.div>
+          </Stagger>
         </section>
 
-        <SectionDivider className="text-card" flip />
+        {/* COMO FUNCIONA */}
+        {passos.length > 0 && (
+          <section id="como-funciona" className="scroll-mt-24 bg-secondary/40 py-16 md:py-24">
+            <div className="container">
+              <Reveal>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">Simples assim</p>
+                <h2 className="mt-3 max-w-2xl text-3xl md:text-4xl">Como funciona</h2>
+              </Reveal>
+
+              <Stagger className="mt-10 grid gap-4 md:grid-cols-3">
+                {passos.map((p, i) => (
+                  <StaggerItem key={p.titulo}>
+                    <div className="card-luxe h-full p-6">
+                      <span className="font-display text-4xl text-gold/70">{String(i + 1).padStart(2, "0")}</span>
+                      <h3 className="mt-4 font-display text-xl">{p.titulo}</h3>
+                      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.descricao}</p>
+                    </div>
+                  </StaggerItem>
+                ))}
+              </Stagger>
+            </div>
+          </section>
+        )}
 
         {/* PLANOS */}
-        <section className="container pb-14">
-          <div className="rounded-3xl border bg-card/70 p-8 shadow-lift backdrop-blur">
-            <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+        <section id="planos" className="container scroll-mt-24 py-16 md:py-24">
+          <Reveal>
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
-                <h2 className="text-3xl md:text-4xl">Planos de locação</h2>
-                <p className="mt-2 text-muted-foreground">Valores configurados no sistema (sem preço fixo no código).</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">Investimento</p>
+                <h2 className="mt-3 text-3xl md:text-4xl">Planos de locação</h2>
+                <p className="mt-2 text-muted-foreground">Escolha a duração ideal para a sua recuperação.</p>
               </div>
-              <Button variant="hero" onClick={rolarParaContato} className="hover-lift">
+              <Button onClick={rolarParaContato} variant="outline" className="rounded-full px-6">
                 Pedir orçamento
               </Button>
             </div>
+          </Reveal>
 
-            <div className="mt-6 grid gap-4 md:grid-cols-3">
-              {planos.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhum plano cadastrado ainda.</p>
-              ) : (
-                planos.map((p) => (
-                  <div key={p.id} className="rounded-2xl border bg-background/30 p-5 shadow-soft hover-lift">
-                    <p className="font-semibold">{p.nome_plano}</p>
-                    <p className="mt-1 text-sm text-muted-foreground">Duração: {p.dias_duracao} dias</p>
-                    <p className="mt-4 text-2xl font-semibold">
+          <Stagger className="mt-10 grid gap-4 md:grid-cols-3">
+            {planos.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum plano cadastrado ainda.</p>
+            ) : (
+              planos.map((p) => (
+                <StaggerItem key={p.id}>
+                  <div className="card-luxe hover-lift group h-full p-7">
+                    <p className="font-display text-xl">{p.nome_plano}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{p.dias_duracao} dias de uso</p>
+                    <p className="mt-6 font-display text-3xl">
                       {Number(p.preco_base).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
                     </p>
-                    <p className="text-xs text-muted-foreground">Preço base — confirme datas e disponibilidade.</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Preço base — confirme datas e disponibilidade.</p>
+                    <div className="mt-6 h-px w-full bg-border transition-colors group-hover:bg-gold/50" />
+                    <button
+                      type="button"
+                      onClick={rolarParaContato}
+                      className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary transition-colors hover:text-gold"
+                    >
+                      Reservar este plano <ArrowRight className="h-4 w-4" />
+                    </button>
                   </div>
-                ))
-              )}
-            </div>
+                </StaggerItem>
+              ))
+            )}
+          </Stagger>
+        </section>
+
+        {/* PARA QUEM É INDICADO */}
+        <section className="bg-secondary/40 py-16 md:py-24">
+          <div className="container grid items-center gap-12 md:grid-cols-2">
+            <Reveal>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">Para quem é</p>
+              <h2 className="mt-3 text-3xl leading-tight md:text-4xl">
+                Recuperação mais rápida e <em className="font-display italic text-primary">tranquila</em>
+              </h2>
+              <p className="mt-4 max-w-lg leading-relaxed text-muted-foreground">
+                A poltrona lift é essencial para quem precisa de autonomia e segurança nos momentos mais delicados do
+                pós-operatório.
+              </p>
+
+              <Stagger className="mt-8 grid gap-3">
+                {[
+                  "Cirurgias plásticas (abdominoplastia, lipo, mama)",
+                  "Cirurgias ortopédicas (coluna, joelho, quadril)",
+                  "Idosos com mobilidade reduzida",
+                  "Gestantes e lactantes (conforto na amamentação)",
+                ].map((item) => (
+                  <StaggerItem key={item}>
+                    <div className="flex items-center gap-4 rounded-2xl border bg-card p-4 shadow-soft transition-colors hover:border-gold/40">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-primary">
+                        <Check className="h-4 w-4" strokeWidth={2} />
+                      </span>
+                      <span className="text-sm font-medium md:text-base">{item}</span>
+                    </div>
+                  </StaggerItem>
+                ))}
+              </Stagger>
+            </Reveal>
+
+            <Reveal delay={0.1} className="relative">
+              <div className="overflow-hidden rounded-[2rem] border shadow-lift">
+                <img
+                  src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800"
+                  alt="Conforto e recuperação em casa"
+                  className="aspect-square w-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <div className="absolute -bottom-5 left-6 right-6 rounded-2xl border bg-background/90 p-4 shadow-lift backdrop-blur-xl md:p-5">
+                <p className="font-display italic">“Foi fundamental na minha recuperação.”</p>
+                <p className="mt-1 text-xs text-gold">★★★★★ · Cliente verificada</p>
+              </div>
+            </Reveal>
           </div>
         </section>
 
-        {/* PARA QUEM É INDICADO (REDESENHADO) */}
-        <section className="container py-16 relative">
-          <div className="absolute inset-0 bg-primary/5 -skew-y-3 transform origin-left z-0" />
-          <div className="relative z-10 grid gap-12 md:grid-cols-2 items-center">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary mb-4">
-                <Sparkles className="h-3 w-3" />
-                Público Alvo
-              </div>
-              <h2 className="text-4xl md:text-5xl font-bold leading-tight mb-6">
-                Recuperação mais rápida e <span className="text-primary">confortável</span>
-              </h2>
-              <p className="text-lg text-muted-foreground mb-8">
-                A poltrona lift é essencial para quem precisa de autonomia e segurança nos momentos mais delicados do pós-operatório.
-              </p>
-              
-              <div className="grid gap-4">
-                {[
-                  "Cirurgias Plásticas (Abdominoplastia, Lipo, Mama)",
-                  "Cirurgias Ortopédicas (Coluna, Joelho, Quadril)",
-                  "Idosos com mobilidade reduzida",
-                  "Gestantes e lactantes (conforto na amamentação)"
-                ].map((item, i) => (
-                  <motion.div 
-                    key={i}
-                    className="flex items-center gap-4 p-4 rounded-xl bg-card/50 border border-primary/10 hover:border-primary/30 transition-colors"
-                    whileHover={{ x: 5 }}
-                  >
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                      <ShieldCheck className="h-5 w-5" />
-                    </div>
-                    <span className="font-medium">{item}</span>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="relative">
-              <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-[2rem] blur-3xl opacity-50" />
-              <div className="relative aspect-square rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl">
-                <img 
-                  src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800" 
-                  alt="Conforto e recuperação" 
-                  className="object-cover w-full h-full"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                <div className="absolute bottom-6 left-6 right-6">
-                  <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
-                    <p className="text-white font-medium">"Foi fundamental na minha recuperação."</p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <div className="flex text-yellow-400">★★★★★</div>
-                      <span className="text-white/60 text-sm">Cliente Verificada</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        {/* DEPOIMENTOS */}
+        {depoimentos.length > 0 && (
+          <section className="container py-16 md:py-24">
+            <Reveal>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">Histórias reais</p>
+              <h2 className="mt-3 text-3xl md:text-4xl">Quem já se recuperou com a LocaCare</h2>
+            </Reveal>
+
+            <Stagger className="mt-10 grid gap-4 md:grid-cols-3">
+              {depoimentos.map((d) => (
+                <StaggerItem key={d.id}>
+                  <figure className="card-luxe h-full p-6">
+                    <Quote className="h-6 w-6 text-gold/60" />
+                    <blockquote className="mt-4 text-sm leading-relaxed text-muted-foreground">
+                      “{d.texto_depoimento}”
+                    </blockquote>
+                    <figcaption className="mt-5 text-sm font-medium">
+                      {d.nome_cliente}
+                      {d.cidade ? <span className="text-muted-foreground"> · {d.cidade}</span> : null}
+                    </figcaption>
+                  </figure>
+                </StaggerItem>
+              ))}
+            </Stagger>
+          </section>
+        )}
 
         {/* FAQ */}
-        <section id="faq" className="container py-14 scroll-mt-24">
-          <h2 className="text-3xl md:text-4xl">Perguntas frequentes</h2>
-          <p className="mt-2 text-muted-foreground">Tire dúvidas antes de solicitar orçamento.</p>
+        <section id="faq" className="container scroll-mt-24 py-16 md:py-24">
+          <Reveal>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">Dúvidas</p>
+            <h2 className="mt-3 text-3xl md:text-4xl">Perguntas frequentes</h2>
+          </Reveal>
 
-          <div className="mt-6 rounded-3xl border bg-card/70 p-3 shadow-lift backdrop-blur">
-            <Accordion type="single" collapsible className="w-full">
-              {faqs.length === 0 ? (
-                <p className="p-4 text-sm text-muted-foreground">Sem perguntas publicadas ainda.</p>
-              ) : (
-                faqs.map((f) => (
-                  <AccordionItem key={f.id} value={f.id}>
-                    <AccordionTrigger className="px-3 text-left">{f.pergunta}</AccordionTrigger>
-                    <AccordionContent className="px-3 text-muted-foreground">{f.resposta}</AccordionContent>
-                  </AccordionItem>
-                ))
-              )}
-            </Accordion>
-          </div>
+          <Reveal delay={0.1}>
+            <div className="card-luxe mt-8 px-2 md:px-6">
+              <Accordion type="single" collapsible className="w-full">
+                {faqs.length === 0 ? (
+                  <p className="p-6 text-sm text-muted-foreground">Sem perguntas publicadas ainda.</p>
+                ) : (
+                  faqs.map((f) => (
+                    <AccordionItem key={f.id} value={f.id} className="border-border/60">
+                      <AccordionTrigger className="px-4 text-left font-medium hover:no-underline">
+                        {f.pergunta}
+                      </AccordionTrigger>
+                      <AccordionContent className="px-4 leading-relaxed text-muted-foreground">
+                        {f.resposta}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))
+                )}
+              </Accordion>
+            </div>
+          </Reveal>
         </section>
 
         {/* CONTATO / PRÉ-RESERVA */}
-        <section className="container py-14" ref={contatoRef}>
-          <div className="mb-6 rounded-3xl border bg-card/70 p-8 shadow-lift backdrop-blur">
-            <h2 id="contato" className="text-3xl md:text-4xl scroll-mt-24">
-              Solicite um orçamento
-            </h2>
-            <p className="mt-2 text-muted-foreground">
-              Prefere falar direto?{" "}
-              <a className="underline-offset-4 hover:underline" href={whatsappHref}>
-                Chame no WhatsApp
-              </a>
-              .
-            </p>
-          </div>
+        <section className="container scroll-mt-24 py-16 md:py-24" ref={contatoRef}>
+          <Reveal>
+            <div className="mx-auto max-w-3xl text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">Vamos conversar</p>
+              <h2 id="contato" className="mt-3 text-3xl md:text-4xl">
+                Solicite um orçamento
+              </h2>
+              <p className="mt-3 text-muted-foreground">
+                Preencha os dados abaixo e a nossa equipe entra em contato para confirmar disponibilidade.
+              </p>
+            </div>
+          </Reveal>
 
-          <PreReservaForm id="pre-reserva" />
+          <Reveal delay={0.1} className="mt-8">
+            <PreReservaForm id="pre-reserva" />
+          </Reveal>
         </section>
       </main>
 

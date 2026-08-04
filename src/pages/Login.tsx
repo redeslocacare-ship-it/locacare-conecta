@@ -65,9 +65,9 @@ export default function LoginPage() {
             <BrandLogo size="xl" />
           </div>
 
-          <Card className="shadow-lift">
+          <Card className="rounded-3xl shadow-lift">
             <CardHeader>
-              <CardTitle className="text-2xl">{titulo}</CardTitle>
+              <CardTitle className="font-display text-2xl font-medium">{titulo}</CardTitle>
               <CardDescription>Área administrativa e operacional da LocaCare.</CardDescription>
             </CardHeader>
             <CardContent>

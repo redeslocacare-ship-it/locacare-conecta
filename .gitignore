@@ -28,3 +28,7 @@ cre.txt
 .env
 scripts/.sync_full.lock
 scripts/.sync_full.lock.*
+
+# Credenciais locais (nunca commitar)
+cre.txt
+.env

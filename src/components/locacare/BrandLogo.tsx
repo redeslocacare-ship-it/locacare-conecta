@@ -1,13 +1,13 @@
 import React from "react";
-import logo from "@/assets/locacare-logo.png";
+import logo from "@/assets/locacare-logo-nova.jpg";
 import { cn } from "@/lib/utils";
 
 /**
  * Componente de marca (logo).
  *
- * - Usa a logomarca oficial enviada.
- * - Mantém alt descritivo (acessibilidade).
- * - Prop size="xl" para destacar no header.
+ * - Nova identidade: wordmark navy + ícone esmeralda sobre fundo branco.
+ * - mix-blend-multiply "apaga" o fundo branco do JPEG sobre qualquer base clara,
+ *   deixando a marca limpa e em evidência, sem chip/moldura.
  */
 export function BrandLogo({
   className,
@@ -16,30 +16,28 @@ export function BrandLogo({
 }: {
   className?: string;
   compact?: boolean;
-  size?: "default" | "xl";
+  size?: "sm" | "default" | "lg" | "xl" | "2xl";
 }) {
-  const sizeClasses = size === "xl" ? "h-16 md:h-20" : compact ? "h-9" : "h-12 md:h-14";
-  const paddingClasses = size === "xl" ? "p-3" : compact ? "p-1.5" : "p-2";
+  const sizes: Record<string, string> = {
+    sm: "h-8",
+    default: "h-10 md:h-12",
+    lg: "h-12 md:h-14",
+    xl: "h-14 md:h-16",
+    "2xl": "h-16 md:h-20",
+  };
+
+  const key = compact ? "sm" : size;
 
   return (
-    <div className={cn("flex items-center gap-3", className)}>
-      {/*
-        Logo branca com fundo primary e efeitos de destaque (ring + shadow).
-      */}
-      <div 
-        className={cn(
-          "rounded-2xl bg-primary shadow-lift ring-2 ring-primary/40 ring-offset-2 ring-offset-background", 
-          paddingClasses
-        )}
-      >
-        <img
-          src={logo}
-          alt="LocaCare — Cuidando do seu pós cirúrgico"
-          className={cn("w-auto", sizeClasses)}
-          loading="eager"
-          decoding="async"
-        />
-      </div>
+    <div className={cn("flex items-center", className)}>
+      <img
+        src={logo}
+        alt="LocaCare — Cuidando do seu pós-cirúrgico"
+        className={cn("w-auto select-none mix-blend-multiply", sizes[key])}
+        loading="eager"
+        decoding="async"
+        draggable={false}
+      />
     </div>
   );
 }

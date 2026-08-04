@@ -51,6 +51,14 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        gold: {
+          DEFAULT: "hsl(var(--gold))",
+          foreground: "hsl(var(--gold-foreground))",
+        },
+        mint: {
+          DEFAULT: "hsl(var(--emerald))",
+          foreground: "hsl(var(--emerald-foreground))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -100,6 +108,14 @@ export default {
           "0%": { transform: "translate(-20%, -20%) scale(0.9)", opacity: "0.6" },
           "100%": { transform: "translate(20%, 20%) scale(1.05)", opacity: "1" },
         },
+        shimmer: {
+          "0%": { backgroundPosition: "200% 0" },
+          "100%": { backgroundPosition: "-200% 0" },
+        },
+        marquee: {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -109,6 +125,8 @@ export default {
         enter: "fade-in 0.35s ease-out, scale-in 0.25s ease-out",
         float: "float 6.5s ease-in-out infinite",
         spotlight: "spotlight 10s ease-in-out infinite alternate",
+        shimmer: "shimmer 5.5s linear infinite",
+        marquee: "marquee 30s linear infinite",
       },
     },
   },

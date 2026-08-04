@@ -122,9 +122,9 @@ export function PreReservaForm({ id }: { id: string }) {
   return (
     <section id={id} className="scroll-mt-24">
       <div className="mx-auto max-w-3xl">
-        <Card className="shadow-soft">
+        <Card className="rounded-3xl shadow-lift">
           <CardHeader>
-            <CardTitle>Contato / Pré-reserva</CardTitle>
+            <CardTitle className="font-display text-2xl font-medium">Pré-reserva</CardTitle>
             <CardDescription>Preencha os dados para receber um orçamento e disponibilidade.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -271,10 +271,10 @@ export function PreReservaForm({ id }: { id: string }) {
                     <FormItem>
                       <FormLabel>Código de Indicação (Opcional)</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="Cupom ou código" 
-                          {...field} 
-                          className="border-dashed border-primary/50 bg-primary/5 focus:border-solid focus:bg-background transition-all"
+                        <Input
+                          placeholder="Cupom ou código"
+                          {...field}
+                          className="border-dashed border-gold/50 bg-gold/5 transition-all focus:border-solid focus:bg-background"
                         />
                       </FormControl>
                       <FormMessage />
@@ -300,7 +300,7 @@ export function PreReservaForm({ id }: { id: string }) {
                   <p className="text-xs text-muted-foreground">
                     Ao enviar, você autoriza contato da LocaCare para continuidade do atendimento.
                   </p>
-                  <Button type="submit" disabled={enviando}>
+                  <Button type="submit" disabled={enviando} size="lg" className="rounded-full px-8">
                     {enviando ? "Enviando…" : "Enviar pré-reserva"}
                   </Button>
                 </div>

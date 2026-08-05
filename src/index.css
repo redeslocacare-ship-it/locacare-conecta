@@ -192,6 +192,33 @@
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
+
+  /* Brilho duplo (branco + dourado) que varre a logomarca periodicamente */
+  .logo-shine {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      105deg,
+      transparent 30%,
+      hsl(0 0% 100% / 0.9) 42%,
+      transparent 52%,
+      hsl(38 60% 70% / 0.5) 60%,
+      transparent 70%
+    );
+    transform: translateX(-130%) skewX(-8deg);
+    animation: logo-shine 3.8s ease-in-out infinite;
+  }
+
+  @keyframes logo-shine {
+    0% {
+      transform: translateX(-130%) skewX(-8deg);
+    }
+    55%,
+    100% {
+      transform: translateX(130%) skewX(-8deg);
+    }
+  }
 }
 
 /* Acessibilidade: respeita "reduzir movimento" do sistema */
@@ -202,7 +229,8 @@
 
   .text-shimmer,
   .animate-float,
-  .animate-spotlight {
+  .animate-spotlight,
+  .logo-shine {
     animation: none !important;
   }
 

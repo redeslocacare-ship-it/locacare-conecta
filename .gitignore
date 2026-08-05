@@ -32,3 +32,4 @@ scripts/.sync_full.lock.*
 # Credenciais locais (nunca commitar)
 cre.txt
 .env
+acessos.txt

@@ -11,6 +11,10 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
+  preview: {
+    // Permite acesso via túnel temporário (apresentações)
+    allowedHosts: [".trycloudflare.com"],
+  },
   plugins: [react()],
   resolve: {
     alias: {

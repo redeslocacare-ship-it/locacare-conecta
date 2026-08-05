@@ -11,10 +11,15 @@ import { supabase } from "@/integrations/supabase/client";
  * - O callback do listener não pode ser async (evita deadlocks).
  */
 
+export type AppRole = "admin" | "atendimento" | "logistica";
+
 type AuthContextValue = {
   carregando: boolean;
   session: Session | null;
   user: User | null;
+  /** Papéis do usuário, lidos de public.user_roles (o RLS só devolve os próprios). */
+  papeis: AppRole[];
+  ehAdmin: boolean;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -23,6 +28,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [carregando, setCarregando] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [papeis, setPapeis] = useState<AppRole[]>([]);
+  const [carregandoPapeis, setCarregandoPapeis] = useState(false);
+
+  // Papéis servem apenas para a navegação. A autorização real é do RLS no banco:
+  // forjar isto no devtools não dá acesso a nenhum dado.
+  useEffect(() => {
+    const uid = user?.id;
+    if (!uid) {
+      setPapeis([]);
+      setCarregandoPapeis(false);
+      return;
+    }
+
+    let cancelado = false;
+    setCarregandoPapeis(true);
+
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", uid)
+      .then(({ data }) => {
+        if (cancelado) return;
+        setPapeis((data ?? []).map((r) => r.role as AppRole));
+        setCarregandoPapeis(false);
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, [user?.id]);
 
   useEffect(() => {
     // 1) Listener primeiro (padrão recomendado)
@@ -45,7 +80,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const value = useMemo<AuthContextValue>(() => ({ carregando, session, user }), [carregando, session, user]);
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      carregando: carregando || carregandoPapeis,
+      session,
+      user,
+      papeis,
+      ehAdmin: papeis.includes("admin"),
+    }),
+    [carregando, carregandoPapeis, session, user, papeis],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

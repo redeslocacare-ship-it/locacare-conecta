@@ -16,8 +16,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
  * Formulário de pré-reserva (lead).
  *
  * Regras:
- * - Cria um registro em `clientes`.
- * - Em seguida cria um registro em `locacoes` com status "lead".
+ * - Envia o lead pela função `criar_pre_reserva` no banco, que valida os dados
+ *   e grava em `clientes` + `locacoes`. O visitante anônimo não tem nenhum
+ *   privilégio direto sobre essas tabelas.
  * - Exibe feedback amigável.
  */
 export function PreReservaForm({ id }: { id: string }) {
@@ -73,41 +74,26 @@ export function PreReservaForm({ id }: { id: string }) {
     setEnviando(true);
 
     try {
-      // Normaliza e-mail opcional
-      const email = values.email?.trim() ? values.email.trim() : null;
+      const observacoes = [
+        values.tipo_cirurgia?.trim() ? `Tipo de cirurgia: ${values.tipo_cirurgia.trim()}` : null,
+        values.mensagem?.trim() ? `Mensagem: ${values.mensagem.trim()}` : null,
+      ]
+        .filter(Boolean)
+        .join("\n");
 
-      // 1) Cria cliente
-      const { data: cliente, error: erroCliente } = await supabase
-        .from("clientes")
-        .insert({
-          nome_completo: values.nome_completo.trim(),
-          telefone_whatsapp: values.telefone_whatsapp.trim(),
-          email,
-          cidade: values.cidade.trim(),
-          bairro: values.bairro?.trim() || null,
-          observacoes: [
-            values.tipo_cirurgia?.trim() ? `Tipo de cirurgia: ${values.tipo_cirurgia.trim()}` : null,
-            values.mensagem?.trim() ? `Mensagem: ${values.mensagem.trim()}` : null,
-          ]
-            .filter(Boolean)
-            .join("\n"),
-        })
-        .select("id")
-        .single();
-
-      if (erroCliente) throw erroCliente;
-
-      // 2) Cria locação em status inicial (lead)
-      const { error: erroLocacao } = await supabase.from("locacoes").insert({
-        cliente_id: cliente.id,
-        origem_lead: "site",
-        status_locacao: "lead",
-        data_inicio_prevista: values.data_inicio_desejada?.trim() ? values.data_inicio_desejada : null,
-        codigo_indicacao_usado: values.codigo_indicacao?.trim() || null,
-        plano_locacao_id: values.plano_locacao_id || null,
+      const { error } = await supabase.rpc("criar_pre_reserva", {
+        p_nome: values.nome_completo.trim(),
+        p_telefone: values.telefone_whatsapp.trim(),
+        p_email: values.email?.trim() || null,
+        p_cidade: values.cidade?.trim() || null,
+        p_bairro: values.bairro?.trim() || null,
+        p_observacoes: observacoes || null,
+        p_data_inicio: values.data_inicio_desejada?.trim() || null,
+        p_codigo_indicacao: values.codigo_indicacao?.trim() || null,
+        p_plano_id: values.plano_locacao_id || null,
       });
 
-      if (erroLocacao) throw erroLocacao;
+      if (error) throw error;
 
       toast.success("Pedido enviado! Em breve a LocaCare entra em contato.");
       form.reset();

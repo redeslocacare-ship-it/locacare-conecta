@@ -399,7 +399,7 @@ def gen_supabase_types(timeout_seconds):
         env["SUPABASE_ACCESS_TOKEN"] = supabase_token
 
     # Tenta usar DB URL para contornar erro de permissão da Platform API
-    db_url = "postgresql://postgres.wwltjlnlutnuypmkwbuy:LocaCare%402026@aws-1-us-east-1.pooler.supabase.com:6543/postgres"
+    db_url = os.environ["SUPABASE_DB_URL"]
     cmd_db = f"npx supabase gen types typescript --db-url \"{db_url}\" --schema public"
     
     log("Tentando gerar types via conexão direta DB...", "WAIT")

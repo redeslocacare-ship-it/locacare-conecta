@@ -122,8 +122,15 @@ export default function ConteudosPage() {
 
   // Update form and local state when data loads
   React.useEffect(() => {
-    if (comoFunciona?.conteudo?.passos) {
-      setPassos(comoFunciona.conteudo.passos);
+    // `conteudo` é jsonb: só confiamos nele depois de checar o formato.
+    const conteudo = comoFunciona?.conteudo;
+    const passosSalvos =
+      conteudo && typeof conteudo === "object" && !Array.isArray(conteudo) && Array.isArray((conteudo as Record<string, unknown>).passos)
+        ? ((conteudo as Record<string, unknown>).passos as { titulo: string; descricao: string }[])
+        : null;
+
+    if (passosSalvos) {
+      setPassos(passosSalvos);
       formComo.setValue("passos_json", JSON.stringify(comoFunciona.conteudo, null, 2));
       formComo.setValue("publicado", comoFunciona.publicado);
     } else {

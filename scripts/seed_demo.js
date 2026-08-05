@@ -3,7 +3,8 @@ import pg from 'pg';
 const { Client } = pg;
 
 // Usando senha válida do banco (Pooler)
-const connectionString = 'postgresql://postgres.wwltjlnlutnuypmkwbuy:WnVqgwTZEsSJc7Yv@aws-1-us-east-1.pooler.supabase.com:6543/postgres';
+const connectionString = process.env.SUPABASE_DB_URL;
+if (!connectionString) throw new Error('Defina SUPABASE_DB_URL no ambiente antes de rodar este script.');
 
 const CLIENTES = [
   { nome: 'Maria Silva', cidade: 'São Paulo', wpp: '11999991111' },

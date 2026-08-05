@@ -1,9 +1,14 @@
 // Configuração
-const supabaseUrl = 'https://wwltjlnlutnuypmkwbuy.supabase.co';
-const serviceRoleKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind3bHRqbG5sdXRudXlwbWt3YnV5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDQ3MTY1MywiZXhwIjoyMDg2MDQ3NjUzfQ.TVTgsAB6h39mqRzXpXsCj9T-UqBXqQdNFjiJqfTJzY0';
+// Uso: SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… ADMIN_EMAIL=… ADMIN_PASSWORD=… npx tsx scripts/create-admin.ts
+const supabaseUrl = process.env.SUPABASE_URL;
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const email = process.env.ADMIN_EMAIL;
+const password = process.env.ADMIN_PASSWORD;
 
-const email = 'admin@locacare.com.br';
-const password = 'LocaCareAdmin2024!'; // Senha inicial
+if (!supabaseUrl || !serviceRoleKey || !email || !password) {
+  throw new Error('Defina SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, ADMIN_EMAIL e ADMIN_PASSWORD no ambiente.');
+}
+if (password.length < 12) throw new Error('Use uma senha de pelo menos 12 caracteres.');
 
 async function createAdmin() {
   console.log(`Tentando criar usuário admin: ${email}...`);
@@ -135,7 +140,7 @@ async function createAdmin() {
   console.log('------------------------------------------------');
   console.log('PROCESSO CONCLUÍDO');
   console.log(`Login: ${email}`);
-  console.log(`Senha: ${password}`);
+  console.log('Senha: a que você passou em ADMIN_PASSWORD (não é ecoada aqui).');
   console.log('------------------------------------------------');
 }
 

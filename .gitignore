@@ -23,13 +23,15 @@ dist-ssr
 *.sln
 *.sw?
 
-# Security
+# Credenciais locais — NUNCA commitar
 cre.txt
-.env
+acessos.txt
+.env.local
+.env.*.local
 scripts/.sync_full.lock
 scripts/.sync_full.lock.*
 
-# Credenciais locais (nunca commitar)
-cre.txt
-.env
-acessos.txt
+# Sobre o `.env`: fica versionado de propósito porque contém APENAS as chaves
+# públicas VITE_* (a anon key já viaja no bundle e é protegida pelo RLS).
+# Segredos — service role key, senha do banco, tokens — vão em .env.local ou
+# nas variáveis de ambiente da Vercel, jamais no .env.

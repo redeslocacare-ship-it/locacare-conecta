@@ -6,7 +6,8 @@ import { fileURLToPath } from 'url';
 const { Client } = pg;
 
 // Connection string from cre.txt
-const connectionString = 'postgresql://postgres.wwltjlnlutnuypmkwbuy:LocaCare%402026@aws-1-us-east-1.pooler.supabase.com:6543/postgres';
+const connectionString = process.env.SUPABASE_DB_URL;
+if (!connectionString) throw new Error('Defina SUPABASE_DB_URL no ambiente antes de rodar este script.');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

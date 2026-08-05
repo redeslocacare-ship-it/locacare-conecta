@@ -1,7 +1,8 @@
 import pg from 'pg';
 const { Client } = pg;
 
-const password = 'WnVqgwTZEsSJc7Yv';
+const password = process.env.SUPABASE_DB_PASSWORD;
+if (!password) throw new Error('Defina SUPABASE_DB_PASSWORD no ambiente.');
 const project = 'wwltjlnlutnuypmkwbuy';
 
 const configs = [

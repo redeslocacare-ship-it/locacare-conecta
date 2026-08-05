@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 type ReferralStats = {
   code: string | null;
@@ -27,6 +28,7 @@ type ReferralStats = {
 
 export default function DashboardPage() {
   const qc = useQueryClient();
+  const { ehAdmin } = useAuth();
   const [saqueAberto, setSaqueAberto] = useState(false);
   const [chavePix, setChavePix] = useState("");
   const [valorSaque, setValorSaque] = useState("");
@@ -46,7 +48,7 @@ export default function DashboardPage() {
       // 1. Get user's referral code
       const { data: userData } = await supabase
         .from("usuarios")
-        .select("codigo_indicacao")
+        .select("id, codigo_indicacao, comissao_percentual")
         .eq("user_id", session!.user.id)
         .single();
 
@@ -154,10 +156,12 @@ export default function DashboardPage() {
           setValorSaque("");
           qc.invalidateQueries({ queryKey: ["referral-stats"] });
       },
-      onError: (e: any) => toast.error(e.message || "Erro ao solicitar saque.")
+      // Erros vindos do banco (têm `code`) não são exibidos: a mensagem crua
+      // revelaria nomes de tabelas e policies. Só mostramos validações nossas.
+      onError: (e: any) => toast.error(e?.code ? "Não foi possível solicitar o saque." : e.message || "Erro ao solicitar saque.")
   });
 
-  const isAdmin = session?.user?.email === "admin@locacare.com.br";
+  const isAdmin = ehAdmin;
 
   return (
     <div className="space-y-6">

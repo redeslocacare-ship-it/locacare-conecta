@@ -9,7 +9,8 @@ const __dirname = path.dirname(__filename);
 
 // Connection string from cre.txt
 // Nota: Em produção real, isso deveria vir de variável de ambiente, mas para este script local mantemos a consistência com cre.txt
-const connectionString = 'postgresql://postgres.wwltjlnlutnuypmkwbuy:WnVqgwTZEsSJc7Yv@aws-1-us-east-1.pooler.supabase.com:6543/postgres';
+const connectionString = process.env.SUPABASE_DB_URL;
+if (!connectionString) throw new Error('Defina SUPABASE_DB_URL no ambiente antes de rodar este script.');
 
 async function deploy() {
   console.log("🚀 [DB DEPLOY] Iniciando atualização do banco de dados...");

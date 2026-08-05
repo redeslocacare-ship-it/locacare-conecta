@@ -4,7 +4,8 @@ import { fileURLToPath } from 'url';
 const { Client } = pg;
 
 // Connection string from cre.txt (updated with correct password)
-const connectionString = 'postgresql://postgres.wwltjlnlutnuypmkwbuy:LocaCare%402026@aws-1-us-east-1.pooler.supabase.com:6543/postgres';
+const connectionString = process.env.SUPABASE_DB_URL;
+if (!connectionString) throw new Error('Defina SUPABASE_DB_URL no ambiente antes de rodar este script.');
 
 async function seed() {
   console.log("🌱 Conectando para semear dados...");

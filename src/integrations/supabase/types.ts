@@ -131,6 +131,69 @@ export type Database = {
         }
         Relationships: []
       }
+      contratos: {
+        Row: {
+          cliente_id: string | null
+          conteudo: string | null
+          criado_em: string
+          id: string
+          pdf_url: string | null
+          tipo: string | null
+        }
+        Insert: {
+          cliente_id?: string | null
+          conteudo?: string | null
+          criado_em?: string
+          id?: string
+          pdf_url?: string | null
+          tipo?: string | null
+        }
+        Update: {
+          cliente_id?: string | null
+          conteudo?: string | null
+          criado_em?: string
+          id?: string
+          pdf_url?: string | null
+          tipo?: string | null
+        }
+        Relationships: []
+      }
+      solicitacoes_saque: {
+        Row: {
+          atualizado_em: string
+          chave_pix: string | null
+          comprovante_url: string | null
+          criado_em: string
+          id: string
+          observacoes: string | null
+          status: string
+          usuario_id: string | null
+          valor: number
+        }
+        Insert: {
+          atualizado_em?: string
+          chave_pix?: string | null
+          comprovante_url?: string | null
+          criado_em?: string
+          id?: string
+          observacoes?: string | null
+          status?: string
+          usuario_id?: string | null
+          valor: number
+        }
+        Update: {
+          atualizado_em?: string
+          chave_pix?: string | null
+          comprovante_url?: string | null
+          criado_em?: string
+          id?: string
+          observacoes?: string | null
+          status?: string
+          usuario_id?: string | null
+          valor?: number
+        }
+        Relationships: []
+      }
       faqs: {
         Row: {
           atualizado_em: string
@@ -165,6 +228,8 @@ export type Database = {
         Row: {
           atualizado_em: string
           cliente_id: string
+          codigo_indicacao_usado: string | null
+          comprovante_url: string | null
           criado_em: string
           data_fim_prevista: string | null
           data_fim_real: string | null
@@ -181,6 +246,8 @@ export type Database = {
         Insert: {
           atualizado_em?: string
           cliente_id: string
+          codigo_indicacao_usado?: string | null
+          comprovante_url?: string | null
           criado_em?: string
           data_fim_prevista?: string | null
           data_fim_real?: string | null
@@ -197,6 +264,8 @@ export type Database = {
         Update: {
           atualizado_em?: string
           cliente_id?: string
+          codigo_indicacao_usado?: string | null
+          comprovante_url?: string | null
           criado_em?: string
           data_fim_prevista?: string | null
           data_fim_real?: string | null
@@ -324,26 +393,35 @@ export type Database = {
       usuarios: {
         Row: {
           atualizado_em: string
+          codigo_indicacao: string | null
+          comissao_percentual: number | null
           criado_em: string
           email: string | null
           id: string
           nome: string | null
+          saldo_indicacoes: number | null
           user_id: string
         }
         Insert: {
           atualizado_em?: string
+          codigo_indicacao?: string | null
+          comissao_percentual?: number | null
           criado_em?: string
           email?: string | null
           id?: string
           nome?: string | null
+          saldo_indicacoes?: number | null
           user_id: string
         }
         Update: {
           atualizado_em?: string
+          codigo_indicacao?: string | null
+          comissao_percentual?: number | null
           criado_em?: string
           email?: string | null
           id?: string
           nome?: string | null
+          saldo_indicacoes?: number | null
           user_id?: string
         }
         Relationships: []
@@ -359,6 +437,42 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      is_admin: {
+        Args: Record<string, never>
+        Returns: boolean
+      }
+      admin_create_partner: {
+        Args: {
+          codigo: string | null
+          email: string
+          name: string
+          password: string
+          percentual: number
+        }
+        Returns: string
+      }
+      admin_delete_user: {
+        Args: { target_user_id: string }
+        Returns: undefined
+      }
+      admin_update_password: {
+        Args: { new_password: string; target_user_id: string }
+        Returns: undefined
+      }
+      criar_pre_reserva: {
+        Args: {
+          p_bairro?: string | null
+          p_cidade?: string | null
+          p_codigo_indicacao?: string | null
+          p_data_inicio?: string | null
+          p_email?: string | null
+          p_nome: string
+          p_observacoes?: string | null
+          p_plano_id?: string | null
+          p_telefone: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

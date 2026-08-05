@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound";
 import LoginPage from "./pages/Login";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { RequireAuth } from "@/components/auth/RequireAuth";
+import { RequireRole } from "@/components/auth/RequireRole";
 import { AppShell } from "@/components/layout/AppShell";
 import DashboardPage from "@/pages/Dashboard";
 import SyncPage from "@/pages/Sync";
@@ -55,9 +56,9 @@ const App = () => (
             <Route
               path="/admin"
               element={
-                <RequireAuth>
+                <RequireRole role="admin">
                   <AdminLayout />
-                </RequireAuth>
+                </RequireRole>
               }
             >
               <Route index element={<AdminDashboardPage />} />

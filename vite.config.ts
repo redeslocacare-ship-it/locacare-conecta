@@ -15,6 +15,13 @@ export default defineConfig(({ mode }) => ({
     // Permite acesso via túnel temporário (apresentações)
     allowedHosts: [".trycloudflare.com"],
   },
+  build: {
+    // Sem sourcemap em produção: nada de código-fonte legível no F12.
+    sourcemap: false,
+    // Remove console/debugger do bundle — evita vazar payloads e erros internos.
+    minify: "esbuild",
+  },
+  esbuild: mode === "production" ? { drop: ["console", "debugger"] } : undefined,
   plugins: [react()],
   resolve: {
     alias: {

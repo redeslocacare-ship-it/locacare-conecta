@@ -26,6 +26,7 @@ dist-ssr
 # Credenciais locais — NUNCA commitar
 cre.txt
 acessos.txt
+cloudflare.txt
 .env.local
 .env.*.local
 scripts/.sync_full.lock

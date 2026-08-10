@@ -140,6 +140,33 @@ export function TiltCard({ children, className }: { children: React.ReactNode; c
   );
 }
 
+/**
+ * Parallax vertical baseado no progresso do próprio elemento na viewport.
+ * `amount` em pixels: positivo desce, negativo sobe conforme o scroll avança.
+ */
+export function ParallaxY({
+  children,
+  amount = -40,
+  className,
+}: {
+  children: React.ReactNode;
+  amount?: number;
+  className?: string;
+}) {
+  const reduzir = useReducedMotion();
+  const ref = useRef<HTMLDivElement | null>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const y = useTransform(scrollYProgress, [0, 1], [-amount, amount]);
+
+  if (reduzir) return <div className={className}>{children}</div>;
+
+  return (
+    <motion.div ref={ref} className={className} style={{ y }}>
+      {children}
+    </motion.div>
+  );
+}
+
 /** Barra fina de progresso de leitura no topo da página. */
 export function ScrollProgress() {
   const reduzir = useReducedMotion();

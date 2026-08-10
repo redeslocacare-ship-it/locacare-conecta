@@ -1,24 +1,36 @@
 import React, { useMemo, useRef } from "react";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
-import { ShieldCheck, Truck, Zap, HandHeart, Check, Quote, ArrowRight } from "lucide-react";
+import { ShieldCheck, Truck, Zap, HandHeart, Check, Quote, ArrowRight, Armchair, Flame, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { PublicHeader } from "@/components/locacare/PublicHeader";
 import { PublicFooter } from "@/components/locacare/PublicFooter";
-import { PreReservaForm } from "@/components/locacare/PreReservaForm";
+import { PreReservaRapida } from "@/components/locacare/PreReservaRapida";
 import { MobileTabBar } from "@/components/locacare/MobileTabBar";
-import { Reveal, Stagger, StaggerItem, ShinyText, TiltCard, ScrollProgress, Marquee } from "@/components/locacare/motion";
+import {
+  Reveal,
+  Stagger,
+  StaggerItem,
+  ShinyText,
+  TiltCard,
+  ScrollProgress,
+  Marquee,
+  ParallaxY,
+} from "@/components/locacare/motion";
 import { useComoFunciona, useDepoimentosPublicados, useFaqsPublicados, usePlanosAtivos } from "@/hooks/useConteudosPublicos";
-import heroPoltrona from "@/assets/hero-poltrona.jpg";
+import poltronaAmbiente from "@/assets/poltrona-1.webp";
+import poltronaReclinada from "@/assets/poltrona-2.webp";
+import poltronaFicha from "@/assets/poltrona-3.webp";
+import poltronaFrontal from "@/assets/poltrona-4.webp";
 
 /**
  * Home pública (conversão) — LocaCare
  *
  * Direção: White Luxury (marfim + petróleo + champanhe)
- * - Base clara e minimalista, tipografia editorial (serif)
- * - Motion sutil: reveals com blur, parallax leve, brilho dourado
+ * - Hero direto ao ponto: copy à esquerda + pré-reserva rápida (2 campos) à direita
+ * - Fotos reais da poltrona em galeria com parallax por coluna
+ * - Motion sutil: reveals com blur, parallax em camadas, brilho dourado
  * - Mobile: sensação de app (tab bar inferior, toques generosos)
- * - Telefone/WhatsApp removidos temporariamente — conversão via formulário
  */
 const Index = () => {
   const reduzirAnimacao = useReducedMotion();
@@ -29,9 +41,10 @@ const Index = () => {
   const { data: passos = [] } = useComoFunciona();
   const { data: planos = [] } = usePlanosAtivos();
 
-  // Parallax sutil no hero — respeita reduced motion
+  // Parallax em camadas no hero — respeita reduced motion
   const { scrollY } = useScroll();
-  const heroImageY = useTransform(scrollY, [0, 900], [0, -30]);
+  const heroFormY = useTransform(scrollY, [0, 900], [0, -26]);
+  const heroGlowY = useTransform(scrollY, [0, 900], [0, 60]);
 
   const beneficios = useMemo(
     () => [
@@ -71,10 +84,16 @@ const Index = () => {
 
       {/* padding inferior no mobile para a tab bar não cobrir conteúdo */}
       <main className="pb-28 md:pb-0">
-        {/* HERO */}
+        {/* HERO — copy + pré-reserva rápida */}
         <section className="relative overflow-hidden bg-hero">
+          <motion.div
+            aria-hidden
+            className="pointer-events-none absolute -right-32 top-10 h-[28rem] w-[28rem] rounded-full bg-gold/10 blur-3xl"
+            style={reduzirAnimacao ? undefined : { y: heroGlowY }}
+          />
+
           <div className="container relative py-14 md:py-24 lg:py-28">
-            <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
+            <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
               <div>
                 <Reveal>
                   <div className="inline-flex items-center gap-2 rounded-full border bg-card px-4 py-1.5 shadow-soft">
@@ -101,12 +120,11 @@ const Index = () => {
 
                 <Reveal delay={0.24}>
                   <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <Button size="lg" onClick={rolarParaContato} className="group rounded-full px-8">
-                      Solicitar orçamento
-                      <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </Button>
                     <Button size="lg" variant="outline" asChild className="rounded-full px-8">
-                      <a href="#beneficios">Conhecer benefícios</a>
+                      <a href="#poltrona">Conhecer a poltrona</a>
+                    </Button>
+                    <Button size="lg" variant="ghost" asChild className="rounded-full px-6 text-muted-foreground">
+                      <a href="#planos">Ver planos e valores</a>
                     </Button>
                   </div>
                 </Reveal>
@@ -125,26 +143,11 @@ const Index = () => {
                 </Stagger>
               </div>
 
+              {/* Card de pré-reserva rápida — flutua sutilmente com o scroll */}
               <Reveal delay={0.15} className="relative">
                 <div className="pointer-events-none absolute -inset-8 rounded-[3rem] bg-accent/60 blur-3xl" />
-
-                <motion.div style={reduzirAnimacao ? undefined : { y: heroImageY }}>
-                  <TiltCard className="relative overflow-hidden rounded-[2rem] border bg-card shadow-lift">
-                    <img
-                      src={heroPoltrona}
-                      alt="Poltrona lift reclinável para pós-operatório (produto LocaCare)"
-                      className="aspect-[4/3] w-full object-cover"
-                      loading="eager"
-                      decoding="async"
-                    />
-
-                    <div className="absolute inset-x-4 bottom-4 rounded-2xl border bg-background/85 p-4 backdrop-blur-xl md:inset-x-6 md:bottom-6 md:p-5">
-                      <p className="font-display text-lg">Poltrona lift reclinável</p>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        Ideal para cirurgias plásticas, ortopédicas e mobilidade reduzida.
-                      </p>
-                    </div>
-                  </TiltCard>
+                <motion.div style={reduzirAnimacao ? undefined : { y: heroFormY }} className="relative">
+                  <PreReservaRapida />
                 </motion.div>
               </Reveal>
             </div>
@@ -162,6 +165,122 @@ const Index = () => {
             "Pagamento facilitado",
           ]}
         />
+
+        {/* A POLTRONA — galeria com parallax por coluna */}
+        <section id="poltrona" className="scroll-mt-24 overflow-hidden py-16 md:py-24">
+          <div className="container">
+            <Reveal>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">Conheça de perto</p>
+              <h2 className="mt-3 max-w-2xl text-3xl md:text-4xl">
+                A poltrona que <em className="font-display italic text-primary">levanta</em> com você
+              </h2>
+              <p className="mt-3 max-w-xl text-muted-foreground">
+                Lift elétrico, reclinação até 160°, aquecimento e 8 pontos de massagem — tudo pensado para o
+                pós-operatório.
+              </p>
+            </Reveal>
+
+            <div className="mt-12 grid gap-6 md:grid-cols-3 md:items-start">
+              <ParallaxY amount={-24}>
+                <Reveal>
+                  <TiltCard className="group relative overflow-hidden rounded-[2rem] border bg-card shadow-lift">
+                    <img
+                      src={poltronaFrontal}
+                      alt="Poltrona lift reclinável LocaCare vista de frente"
+                      className="aspect-[4/5] w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    <div className="absolute inset-x-4 bottom-4 rounded-2xl border bg-background/85 p-4 backdrop-blur-xl">
+                      <p className="flex items-center gap-2 font-display text-lg">
+                        <Armchair className="h-4 w-4 text-gold" strokeWidth={1.75} /> Assento em espuma D25
+                      </p>
+                      <p className="mt-1 text-sm text-muted-foreground">Encosto acolchoado e apoio firme para o corpo.</p>
+                    </div>
+                  </TiltCard>
+                </Reveal>
+              </ParallaxY>
+
+              <ParallaxY amount={-56}>
+                <Reveal delay={0.08}>
+                  <TiltCard className="group relative overflow-hidden rounded-[2rem] border bg-card shadow-lift">
+                    <img
+                      src={poltronaReclinada}
+                      alt="Poltrona LocaCare totalmente reclinada com base lift estendida"
+                      className="aspect-[4/5] w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    <div className="absolute inset-x-4 bottom-4 rounded-2xl border bg-background/85 p-4 backdrop-blur-xl">
+                      <p className="flex items-center gap-2 font-display text-lg">
+                        <Timer className="h-4 w-4 text-gold" strokeWidth={1.75} /> Reclina até 160°
+                      </p>
+                      <p className="mt-1 text-sm text-muted-foreground">Posição ideal para descanso e drenagem.</p>
+                    </div>
+                  </TiltCard>
+                </Reveal>
+              </ParallaxY>
+
+              <ParallaxY amount={-36}>
+                <Reveal delay={0.16}>
+                  <TiltCard className="group relative overflow-hidden rounded-[2rem] border bg-card shadow-lift">
+                    <img
+                      src={poltronaAmbiente}
+                      alt="Poltrona lift LocaCare em ambiente de sala de estar"
+                      className="aspect-[4/5] w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    <div className="absolute inset-x-4 bottom-4 rounded-2xl border bg-background/85 p-4 backdrop-blur-xl">
+                      <p className="flex items-center gap-2 font-display text-lg">
+                        <Flame className="h-4 w-4 text-gold" strokeWidth={1.75} /> Aquecimento + massagem
+                      </p>
+                      <p className="mt-1 text-sm text-muted-foreground">8 pontos de massagem distribuídos pela poltrona.</p>
+                    </div>
+                  </TiltCard>
+                </Reveal>
+              </ParallaxY>
+            </div>
+
+            {/* Ficha técnica (infográfico) */}
+            <Reveal delay={0.1} className="mt-10">
+              <div className="card-luxe overflow-hidden p-3 md:p-6">
+                <div className="grid items-center gap-6 md:grid-cols-[0.9fr_1.1fr]">
+                  <div className="px-4 py-6 md:px-6">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">Ficha técnica</p>
+                    <h3 className="mt-3 font-display text-2xl md:text-3xl">Cada detalhe pensado na sua recuperação</h3>
+                    <ul className="mt-5 grid gap-2.5 text-sm text-muted-foreground">
+                      {[
+                        "Base lift de elevação com reclinação elétrica até 160°",
+                        "Controle multifuncional de massagem e aquecimento — bivolt",
+                        "Estrutura em madeira maciça e revestimento em PU",
+                        "2 porta-copos embutidos e revisteiro lateral",
+                      ].map((item) => (
+                        <li key={item} className="flex items-start gap-3">
+                          <Check className="mt-0.5 h-4 w-4 shrink-0 text-mint" strokeWidth={2} />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                    <Button onClick={rolarParaContato} className="group mt-7 rounded-full px-7">
+                      Fazer pré-reserva
+                      <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </Button>
+                  </div>
+                  <ParallaxY amount={-18}>
+                    <img
+                      src={poltronaFicha}
+                      alt="Infográfico com as especificações técnicas da poltrona lift"
+                      className="w-full rounded-2xl border bg-white object-contain"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </ParallaxY>
+                </div>
+              </div>
+            </Reveal>
+          </div>
+        </section>
 
         {/* BENEFÍCIOS */}
         <section id="beneficios" className="container scroll-mt-24 py-16 md:py-24">
@@ -219,7 +338,7 @@ const Index = () => {
                 <p className="mt-2 text-muted-foreground">Escolha a duração ideal para a sua recuperação.</p>
               </div>
               <Button onClick={rolarParaContato} variant="outline" className="rounded-full px-6">
-                Pedir orçamento
+                Fazer pré-reserva
               </Button>
             </div>
           </Reveal>
@@ -285,15 +404,17 @@ const Index = () => {
             </Reveal>
 
             <Reveal delay={0.1} className="relative">
-              <div className="overflow-hidden rounded-[2rem] border shadow-lift">
-                <img
-                  src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800"
-                  alt="Conforto e recuperação em casa"
-                  className="aspect-square w-full object-cover"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </div>
+              <ParallaxY amount={-22}>
+                <div className="overflow-hidden rounded-[2rem] border shadow-lift">
+                  <img
+                    src={poltronaAmbiente}
+                    alt="Poltrona lift LocaCare instalada em uma sala de estar"
+                    className="aspect-square w-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+              </ParallaxY>
               <div className="absolute -bottom-5 left-6 right-6 rounded-2xl border bg-background/90 p-4 shadow-lift backdrop-blur-xl md:p-5">
                 <p className="font-display italic">“Foi fundamental na minha recuperação.”</p>
                 <p className="mt-1 text-xs text-gold">★★★★★ · Cliente verificada</p>
@@ -359,22 +480,24 @@ const Index = () => {
         </section>
 
         {/* CONTATO / PRÉ-RESERVA */}
-        <section className="container scroll-mt-24 py-16 md:py-24" ref={contatoRef}>
-          <Reveal>
-            <div className="mx-auto max-w-3xl text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">Vamos conversar</p>
-              <h2 id="contato" className="mt-3 text-3xl md:text-4xl">
-                Solicite um orçamento
-              </h2>
-              <p className="mt-3 text-muted-foreground">
-                Preencha os dados abaixo e a nossa equipe entra em contato para confirmar disponibilidade.
-              </p>
-            </div>
-          </Reveal>
+        <section className="relative scroll-mt-24 overflow-hidden bg-hero py-16 md:py-24" ref={contatoRef}>
+          <div className="container">
+            <Reveal>
+              <div className="mx-auto max-w-2xl text-center">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">Vamos conversar</p>
+                <h2 id="contato" className="mt-3 text-3xl md:text-4xl">
+                  Faça sua <ShinyText>pré-reserva</ShinyText> agora
+                </h2>
+                <p className="mt-3 text-muted-foreground">
+                  Só nome e telefone — nossa equipe chama você no WhatsApp para confirmar disponibilidade.
+                </p>
+              </div>
+            </Reveal>
 
-          <Reveal delay={0.1} className="mt-8">
-            <PreReservaForm id="pre-reserva" />
-          </Reveal>
+            <Reveal delay={0.1} className="mt-8">
+              <PreReservaRapida className="mx-auto max-w-md" />
+            </Reveal>
+          </div>
         </section>
       </main>
 
